@@ -7,3 +7,4 @@ zip -r azure-ad-manager.zip public src index.html package.json tailwind.config.t
 
 echo "Archive created: azure-ad-manager.zip"
 echo "You can download this file to get a copy of the application."
+
