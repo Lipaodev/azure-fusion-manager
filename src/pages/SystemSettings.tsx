@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Settings, 
@@ -36,7 +37,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const SystemSettings = () => {
   const { toast } = useToast();
@@ -72,6 +73,10 @@ const SystemSettings = () => {
         description: "Database backup completed successfully.",
       });
     }, 2000);
+  };
+
+  const handleValueChange = () => {
+    setSettingsUpdated(true);
   };
 
   return (
@@ -150,7 +155,7 @@ const SystemSettings = () => {
                 <label className="text-sm font-medium">Time Zone</label>
                 <Select 
                   defaultValue="utc" 
-                  onValueChange={() => setSettingsUpdated(true)}
+                  onValueChange={handleValueChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select time zone" />
@@ -172,7 +177,7 @@ const SystemSettings = () => {
                 <label className="text-sm font-medium">Date Format</label>
                 <Select 
                   defaultValue="mdy" 
-                  onValueChange={() => setSettingsUpdated(true)}
+                  onValueChange={handleValueChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select date format" />
@@ -192,7 +197,7 @@ const SystemSettings = () => {
                 <label className="text-sm font-medium">Language</label>
                 <Select 
                   defaultValue="en" 
-                  onValueChange={() => setSettingsUpdated(true)}
+                  onValueChange={handleValueChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select language" />
@@ -217,7 +222,7 @@ const SystemSettings = () => {
                     Show in-app notifications for system events
                   </p>
                 </div>
-                <Switch defaultChecked onCheckedChange={() => setSettingsUpdated(true)} />
+                <Switch defaultChecked onCheckedChange={handleValueChange} />
               </div>
               
               <div className="flex items-center justify-between space-x-2">
@@ -227,7 +232,7 @@ const SystemSettings = () => {
                     Automatically refresh dashboard data every 5 minutes
                   </p>
                 </div>
-                <Switch defaultChecked onCheckedChange={() => setSettingsUpdated(true)} />
+                <Switch defaultChecked onCheckedChange={handleValueChange} />
               </div>
             </CardContent>
             <CardFooter className="border-t pt-6">
@@ -255,7 +260,7 @@ const SystemSettings = () => {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Session Timeout</label>
-                <Select defaultValue="30" onValueChange={() => setSettingsUpdated(true)}>
+                <Select defaultValue="30" onValueChange={handleValueChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select timeout" />
                   </SelectTrigger>
@@ -279,8 +284,8 @@ const SystemSettings = () => {
                     <div className="flex flex-col space-y-1">
                       <label className="text-sm">Minimum Length</label>
                     </div>
-                    <Select defaultValue="8" className="w-[100px]" onValueChange={() => setSettingsUpdated(true)}>
-                      <SelectTrigger>
+                    <Select defaultValue="8" onValueChange={handleValueChange}>
+                      <SelectTrigger className="w-[100px]">
                         <SelectValue placeholder="Length" />
                       </SelectTrigger>
                       <SelectContent>
@@ -297,21 +302,21 @@ const SystemSettings = () => {
                     <div className="flex flex-col space-y-1">
                       <label className="text-sm">Require Uppercase</label>
                     </div>
-                    <Switch defaultChecked onCheckedChange={() => setSettingsUpdated(true)} />
+                    <Switch defaultChecked onCheckedChange={handleValueChange} />
                   </div>
                   
                   <div className="flex items-center justify-between space-x-2">
                     <div className="flex flex-col space-y-1">
                       <label className="text-sm">Require Numbers</label>
                     </div>
-                    <Switch defaultChecked onCheckedChange={() => setSettingsUpdated(true)} />
+                    <Switch defaultChecked onCheckedChange={handleValueChange} />
                   </div>
                   
                   <div className="flex items-center justify-between space-x-2">
                     <div className="flex flex-col space-y-1">
                       <label className="text-sm">Require Special Characters</label>
                     </div>
-                    <Switch defaultChecked onCheckedChange={() => setSettingsUpdated(true)} />
+                    <Switch defaultChecked onCheckedChange={handleValueChange} />
                   </div>
                 </div>
               </div>
@@ -325,7 +330,7 @@ const SystemSettings = () => {
                       Force all users to set up two-factor authentication
                     </p>
                   </div>
-                  <Switch defaultChecked={false} onCheckedChange={() => setSettingsUpdated(true)} />
+                  <Switch defaultChecked={false} onCheckedChange={handleValueChange} />
                 </div>
               </div>
               
@@ -339,15 +344,15 @@ const SystemSettings = () => {
                         Limit access to specific IP addresses
                       </p>
                     </div>
-                    <Switch defaultChecked={false} onCheckedChange={() => setSettingsUpdated(true)} />
+                    <Switch defaultChecked={false} onCheckedChange={handleValueChange} />
                   </div>
                   
                   <div className="flex items-center justify-between space-x-2">
                     <div className="flex flex-col space-y-1">
                       <label className="text-sm">Lock Account After Failed Attempts</label>
                     </div>
-                    <Select defaultValue="5" className="w-[100px]" onValueChange={() => setSettingsUpdated(true)}>
-                      <SelectTrigger>
+                    <Select defaultValue="5" onValueChange={handleValueChange}>
+                      <SelectTrigger className="w-[100px]">
                         <SelectValue placeholder="Attempts" />
                       </SelectTrigger>
                       <SelectContent>
@@ -394,12 +399,12 @@ const SystemSettings = () => {
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm">Enable scheduled database backups</p>
                       </div>
-                      <Switch defaultChecked onCheckedChange={() => setSettingsUpdated(true)} />
+                      <Switch defaultChecked onCheckedChange={handleValueChange} />
                     </div>
                     
                     <div className="flex items-center space-x-2">
                       <p className="text-sm">Backup frequency:</p>
-                      <Select defaultValue="daily" onValueChange={() => setSettingsUpdated(true)}>
+                      <Select defaultValue="daily" onValueChange={handleValueChange}>
                         <SelectTrigger className="w-[150px]">
                           <SelectValue placeholder="Select frequency" />
                         </SelectTrigger>
@@ -452,12 +457,12 @@ const SystemSettings = () => {
                         Store detailed debug information (may impact performance)
                       </p>
                     </div>
-                    <Switch defaultChecked={false} onCheckedChange={() => setSettingsUpdated(true)} />
+                    <Switch defaultChecked={false} onCheckedChange={handleValueChange} />
                   </div>
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Log Retention Period</label>
-                    <Select defaultValue="30" onValueChange={() => setSettingsUpdated(true)}>
+                    <Select defaultValue="30" onValueChange={handleValueChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select period" />
                       </SelectTrigger>

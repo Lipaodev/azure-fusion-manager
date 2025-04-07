@@ -39,7 +39,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -156,10 +156,17 @@ const EmailSettings = () => {
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     // Ensure all required properties are included when updating state
     const updatedSettings: EmailSettingsType = {
-      ...emailSettings,
-      ...data
+      smtpServer: data.smtpServer,
+      port: data.port,
+      useSsl: data.useSsl,
+      username: data.username,
+      password: data.password,
+      fromAddress: data.fromAddress,
+      enabled: data.enabled
     };
+    
     setEmailSettings(updatedSettings);
+    
     toast({
       title: "Settings Saved",
       description: "Email notification settings have been updated.",
@@ -312,7 +319,7 @@ const EmailSettings = () => {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••••" {...field} />
+                            <Input type="password" placeholder="••••••••" {...field} />
                           </FormControl>
                           <FormDescription>
                             Password for SMTP authentication

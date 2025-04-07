@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
@@ -143,8 +144,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ open }) => {
               >
                 {item.icon}
                 <span className={cn(
-                  "ml-3 transition-opacity duration-300",
-                  open ? "opacity-100" : "opacity-0 hidden lg:hidden"
+                  "ml-3",
+                  !open && "lg:hidden"
                 )}>
                   {item.title}
                 </span>
