@@ -1,12 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, UserPlus, Groups, Server, Cloud, AlertTriangle, ActivitySquare } from 'lucide-react';
+import { Users, UserPlus, Group, Server, Cloud, AlertTriangle, ActivitySquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
-// Mock data for the dashboard
 const stats = {
   adUsers: 375,
   adGroups: 48,
@@ -67,7 +65,7 @@ const Dashboard = () => {
             <CardTitle className="text-sm font-medium">
               AD Groups
             </CardTitle>
-            <Groups className="h-4 w-4 text-muted-foreground" />
+            <Group className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.adGroups}</div>

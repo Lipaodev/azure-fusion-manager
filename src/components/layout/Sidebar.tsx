@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
@@ -6,7 +5,7 @@ import {
   Users, 
   UserPlus, 
   UserCog,
-  Groups, 
+  Group, 
   Server, 
   Settings, 
   BarChart, 
@@ -47,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open }) => {
     {
       title: "AD Groups",
       href: "/ad-groups",
-      icon: <Groups className="h-5 w-5" />
+      icon: <Group className="h-5 w-5" />
     },
     {
       title: "AD Servers",

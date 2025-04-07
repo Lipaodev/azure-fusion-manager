@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Monitor, 
@@ -66,8 +65,8 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
-// Audit log entry interface
 interface AuditLogEntry {
   id: string;
   timestamp: Date;
@@ -79,158 +78,8 @@ interface AuditLogEntry {
   status: 'success' | 'failure' | 'warning';
 }
 
-// Mock data for audit logs
 const mockAuditLogs: AuditLogEntry[] = [
-  {
-    id: 'log1',
-    timestamp: new Date(2023, 11, 28, 14, 32, 5),
-    action: 'User Created',
-    user: 'admin@example.com',
-    target: 'john.smith@example.com',
-    details: 'Created new user account',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log2',
-    timestamp: new Date(2023, 11, 28, 14, 15, 22),
-    action: 'Login',
-    user: 'admin@example.com',
-    target: 'N/A',
-    details: 'Successfully logged in',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log3',
-    timestamp: new Date(2023, 11, 28, 12, 5, 17),
-    action: 'Password Reset',
-    user: 'admin@example.com',
-    target: 'maria.johnson@example.com',
-    details: 'Reset user password',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log4',
-    timestamp: new Date(2023, 11, 27, 16, 42, 11),
-    action: 'Login',
-    user: 'david.williams@example.com',
-    target: 'N/A',
-    details: 'Failed login attempt',
-    ipAddress: '203.0.113.45',
-    status: 'failure',
-  },
-  {
-    id: 'log5',
-    timestamp: new Date(2023, 11, 27, 15, 30, 8),
-    action: 'Group Modified',
-    user: 'admin@example.com',
-    target: 'Marketing Team',
-    details: 'Added 2 users to group',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log6',
-    timestamp: new Date(2023, 11, 27, 11, 12, 36),
-    action: 'License Assigned',
-    user: 'admin@example.com',
-    target: 'alice.lee@example.com',
-    details: 'Assigned Microsoft 365 Business Premium license',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log7',
-    timestamp: new Date(2023, 11, 26, 17, 5, 42),
-    action: 'User Modified',
-    user: 'admin@example.com',
-    target: 'robert.garcia@example.com',
-    details: 'Updated user department and job title',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log8',
-    timestamp: new Date(2023, 11, 26, 14, 22, 19),
-    action: 'Login',
-    user: 'john.smith@example.com',
-    target: 'N/A',
-    details: 'Invalid password provided',
-    ipAddress: '198.51.100.73',
-    status: 'failure',
-  },
-  {
-    id: 'log9',
-    timestamp: new Date(2023, 11, 26, 10, 45, 3),
-    action: 'User Deleted',
-    user: 'admin@example.com',
-    target: 'former.employee@example.com',
-    details: 'User account deleted',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log10',
-    timestamp: new Date(2023, 11, 25, 16, 33, 27),
-    action: 'System Settings',
-    user: 'admin@example.com',
-    target: 'Email Notifications',
-    details: 'Updated email notification settings',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log11',
-    timestamp: new Date(2023, 11, 25, 13, 17, 42),
-    action: 'SSO Configuration',
-    user: 'admin@example.com',
-    target: 'Azure AD',
-    details: 'Updated Azure AD SSO configuration',
-    ipAddress: '192.168.1.100',
-    status: 'warning',
-  },
-  {
-    id: 'log12',
-    timestamp: new Date(2023, 11, 25, 11, 2, 5),
-    action: 'Report Generated',
-    user: 'admin@example.com',
-    target: 'License Usage Report',
-    details: 'Generated and exported license usage report',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log13',
-    timestamp: new Date(2023, 11, 24, 16, 42, 31),
-    action: 'AD Server Added',
-    user: 'admin@example.com',
-    target: 'dc03.example.com',
-    details: 'Added new Active Directory server',
-    ipAddress: '192.168.1.100',
-    status: 'success',
-  },
-  {
-    id: 'log14',
-    timestamp: new Date(2023, 11, 24, 14, 15, 8),
-    action: 'Login',
-    user: 'alice.lee@example.com',
-    target: 'N/A',
-    details: 'Successful login via SSO',
-    ipAddress: '203.0.113.22',
-    status: 'success',
-  },
-  {
-    id: 'log15',
-    timestamp: new Date(2023, 11, 24, 10, 37, 14),
-    action: 'System Backup',
-    user: 'system',
-    target: 'Database',
-    details: 'Automatic database backup completed',
-    ipAddress: '192.168.1.5',
-    status: 'success',
-  },
+  // ... keep existing mock data
 ];
 
 const AuditLogs = () => {
@@ -241,10 +90,7 @@ const AuditLogs = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortField, setSortField] = useState<keyof AuditLogEntry>('timestamp');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [selectedDateRange, setSelectedDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined,
   });
@@ -252,10 +98,8 @@ const AuditLogs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const logsPerPage = 10;
 
-  // Get unique action types for filter
   const actionTypes = [...new Set(auditLogs.map(log => log.action))];
 
-  // Filter and sort logs
   const filteredLogs = auditLogs.filter(log => {
     const matchesSearch = 
       log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -291,7 +135,6 @@ const AuditLogs = () => {
       : valB.localeCompare(valA);
   });
 
-  // Pagination
   const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
@@ -312,7 +155,6 @@ const AuditLogs = () => {
       description: "Audit logs are being exported to CSV.",
     });
     
-    // In a real app, this would trigger a download
     setTimeout(() => {
       toast({
         title: "Export Complete",
@@ -329,7 +171,6 @@ const AuditLogs = () => {
     setCurrentPage(1);
   };
 
-  // Get icon based on action
   const getActionIcon = (action: string) => {
     switch (action) {
       case 'Login':
@@ -349,7 +190,6 @@ const AuditLogs = () => {
     }
   };
 
-  // Get badge color based on status
   const getStatusBadge = (status: 'success' | 'failure' | 'warning') => {
     switch (status) {
       case 'success':
@@ -435,26 +275,27 @@ const AuditLogs = () => {
                     className="justify-start text-left font-normal w-full"
                   >
                     <Calendar className="mr-2 h-4 w-4" />
-                    {selectedDateRange.from ? (
+                    {selectedDateRange?.from ? (
                       selectedDateRange.to ? (
                         <>
-                          {format(selectedDateRange.from, 'LLL dd, y')} -{' '}
-                          {format(selectedDateRange.to, 'LLL dd, y')}
+                          {format(selectedDateRange.from, "PPP")} - {format(selectedDateRange.to, "PPP")}
                         </>
                       ) : (
-                        format(selectedDateRange.from, 'LLL dd, y')
+                        format(selectedDateRange.from, "PPP")
                       )
                     ) : (
                       <span>Pick a date range</span>
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
+                    initialFocus
                     mode="range"
+                    defaultMonth={selectedDateRange?.from}
                     selected={selectedDateRange}
                     onSelect={setSelectedDateRange}
-                    initialFocus
+                    numberOfMonths={2}
                   />
                 </PopoverContent>
               </Popover>
@@ -646,7 +487,6 @@ const AuditLogs = () => {
         )}
       </Card>
 
-      {/* Log Details Dialog */}
       <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
         <DialogContent>
           <DialogHeader>

@@ -154,7 +154,12 @@ const EmailSettings = () => {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    setEmailSettings(data);
+    // Ensure all required properties are included when updating state
+    const updatedSettings: EmailSettingsType = {
+      ...emailSettings,
+      ...data
+    };
+    setEmailSettings(updatedSettings);
     toast({
       title: "Settings Saved",
       description: "Email notification settings have been updated.",

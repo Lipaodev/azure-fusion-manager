@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Settings, 
@@ -149,7 +148,10 @@ const SystemSettings = () => {
               
               <div className="space-y-2">
                 <label className="text-sm font-medium">Time Zone</label>
-                <Select defaultValue="utc" onValueChange={() => setSettingsUpdated(true)}>
+                <Select 
+                  defaultValue="utc" 
+                  onValueChange={() => setSettingsUpdated(true)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select time zone" />
                   </SelectTrigger>
@@ -168,7 +170,10 @@ const SystemSettings = () => {
               
               <div className="space-y-2">
                 <label className="text-sm font-medium">Date Format</label>
-                <Select defaultValue="mdy" onValueChange={() => setSettingsUpdated(true)}>
+                <Select 
+                  defaultValue="mdy" 
+                  onValueChange={() => setSettingsUpdated(true)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select date format" />
                   </SelectTrigger>
@@ -185,7 +190,10 @@ const SystemSettings = () => {
               
               <div className="space-y-2">
                 <label className="text-sm font-medium">Language</label>
-                <Select defaultValue="en" onValueChange={() => setSettingsUpdated(true)}>
+                <Select 
+                  defaultValue="en" 
+                  onValueChange={() => setSettingsUpdated(true)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>

@@ -1,11 +1,13 @@
-
 import React, { useState } from 'react';
 import { 
   Cloud, 
-  User, 
+  Users, 
   Key, 
-  Download, 
-  RefreshCw,
+  BarChart, 
+  RefreshCcw, 
+  ArrowDownToLine, 
+  Save,
+  Trash2,
   Search,
   UserPlus,
   Mail,
@@ -239,12 +241,12 @@ const Microsoft365 = () => {
           <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
             {isRefreshing ? (
               <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
                 Refreshing...
               </>
             ) : (
               <>
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCcw className="mr-2 h-4 w-4" />
                 Refresh Data
               </>
             )}
@@ -259,7 +261,7 @@ const Microsoft365 = () => {
       <Tabs defaultValue="users" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="users" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
+            <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Users</span>
           </TabsTrigger>
           <TabsTrigger value="licenses" className="flex items-center gap-2">
