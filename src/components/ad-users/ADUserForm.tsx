@@ -3,7 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { UserPlus, User, Save, Calendar, Calendar as DateIcon } from 'lucide-react';
+import { UserPlus, User, Save, CalendarIcon, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,6 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { ADUser, ADGroup } from '@/types';
 import { format } from 'date-fns';
 
@@ -332,7 +333,7 @@ const ADUserForm: React.FC<ADUserFormProps> = ({
                                 ) : (
                                   <span>Never Expires</span>
                                 )}
-                                <DateIcon className="ml-auto h-4 w-4 opacity-50" />
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>

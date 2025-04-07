@@ -6,7 +6,7 @@ import { Navbar } from './Navbar';
 import { MoonIcon, SunIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/toaster';
-import { Sonner } from '@/components/ui/sonner';
+import { Toaster as SonnerToaster } from 'sonner';
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -59,7 +59,7 @@ const MainLayout = () => {
         </Button>
       </div>
       <Toaster />
-      <Sonner />
+      <SonnerToaster />
     </div>
   );
 };
