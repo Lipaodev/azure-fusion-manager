@@ -14,25 +14,25 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
     
-    // Simulate login API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const success = await login(username, password);
       
-      // Simple validation for demo
-      if (username.length > 0 && password.length > 0) {
+      if (success) {
         toast({
           title: "Login Successful",
           description: "Welcome to Azure AD Manager",
@@ -45,20 +45,38 @@ const Login = () => {
           variant: "destructive",
         });
       }
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAzureLogin = () => {
     setIsLoading(true);
     
     // Simulate Azure SSO process
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Azure SSO Login Successful",
-        description: "Welcome to Azure AD Manager",
-      });
-      navigate('/');
+    setTimeout(async () => {
+      try {
+        await login("azureuser", "password");
+        toast({
+          title: "Azure SSO Login Successful",
+          description: "Welcome to Azure AD Manager",
+        });
+        navigate('/');
+      } catch (error) {
+        toast({
+          title: "Azure SSO Login Error",
+          description: "An unexpected error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }, 1500);
   };
 

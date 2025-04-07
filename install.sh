@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Insert default admin user
 INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, is_admin)
-VALUES ('admin', 'admin123', 'admin@example.com', 'Admin', 'User', 1);
+VALUES ('admin', 'admin', 'admin@example.com', 'Admin', 'User', 1);
 
 -- Insert default settings
 INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_server', '');
@@ -115,6 +115,7 @@ INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_username', '');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_password', '');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_ssl', 'false');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('from_email', 'noreply@example.com');
+INSERT OR IGNORE INTO settings (key, value) VALUES ('session_timeout', '15');
 EOF
     echo "✓ Database initialized"
 fi
@@ -146,7 +147,7 @@ echo "cd azure-ad-manager"
 echo "node start.js"
 echo ""
 echo "The application will be available at: http://localhost:8080"
-echo "Default login: admin / admin123"
+echo "Default login: admin / admin"
 echo ""
 echo "IMPORTANT: This is a development setup. For production use,"
 echo "please configure proper authentication and secure the database."

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings, 
   Save, 
@@ -37,12 +36,17 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SystemSettings = () => {
   const { toast } = useToast();
+  const { updateSessionTimeout } = useAuth();
   const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>('system');
   const [settingsUpdated, setSettingsUpdated] = useState(false);
+  const [sessionTimeout, setSessionTimeout] = useState<string>(
+    localStorage.getItem('sessionTimeout') || '15'
+  );
 
   const handleSaveGeneralSettings = () => {
     toast({
@@ -53,6 +57,8 @@ const SystemSettings = () => {
   };
 
   const handleSaveSecuritySettings = () => {
+    updateSessionTimeout(parseInt(sessionTimeout, 10));
+    
     toast({
       title: "Security Settings Saved",
       description: "Your security settings have been updated.",
@@ -76,6 +82,11 @@ const SystemSettings = () => {
   };
 
   const handleValueChange = () => {
+    setSettingsUpdated(true);
+  };
+
+  const handleSessionTimeoutChange = (value: string) => {
+    setSessionTimeout(value);
     setSettingsUpdated(true);
   };
 
@@ -260,7 +271,10 @@ const SystemSettings = () => {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Session Timeout</label>
-                <Select defaultValue="30" onValueChange={handleValueChange}>
+                <Select 
+                  value={sessionTimeout} 
+                  onValueChange={handleSessionTimeoutChange}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select timeout" />
                   </SelectTrigger>
