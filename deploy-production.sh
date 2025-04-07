@@ -13,7 +13,22 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
-# Build the application
+# Check for Node.js
+if ! command -v node &> /dev/null; then
+    echo "Node.js is not installed. Please install Node.js v16 or higher."
+    exit 1
+fi
+
+# Check Node.js version
+NODE_VERSION=$(node -v | cut -d 'v' -f 2)
+NODE_MAJOR_VERSION=$(echo $NODE_VERSION | cut -d '.' -f 1)
+if [ $NODE_MAJOR_VERSION -lt 16 ]; then
+    echo "Node.js version $NODE_VERSION is not supported."
+    echo "Please upgrade to Node.js v16 or higher."
+    exit 1
+fi
+
+# Create production build
 echo "Building the application for production..."
 npm run build
 
@@ -23,16 +38,48 @@ if [ ! -d "dist" ]; then
     exit 1
 fi
 
-echo "====================================================="
-echo "Build Successful!"
-echo ""
-echo "The production build is in the 'dist' directory."
-echo ""
-echo "To serve the application with a simple HTTP server:"
-echo "npm install -g serve"
-echo "serve -s dist"
-echo ""
-echo "For production use, configure your web server (Nginx, Apache, etc.)"
-echo "to serve the files from the 'dist' directory."
-echo "====================================================="
+# Create production server script
+echo "Creating production server script..."
+cat > serve-production.js << EOL
+// Simple production server script
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
 
+// Check if express is installed
+try {
+  require.resolve('express');
+} catch (e) {
+  console.error('Express is not installed. Installing...');
+  require('child_process').execSync('npm install express --no-save', { stdio: 'inherit' });
+}
+
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+// Serve static files from the dist directory
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// For all requests, send index.html (Client-side routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(\`Server running at http://localhost:\${PORT}\`);
+  console.log(\`Press Ctrl+C to stop\`);
+});
+EOL
+
+echo "====================================================="
+echo "Production Build Successful!"
+echo ""
+echo "To start the production server:"
+echo "node serve-production.js"
+echo ""
+echo "For a more robust production setup, consider:"
+echo "- Using PM2 for process management"
+echo "- Setting up Nginx as a reverse proxy"
+echo "- Configuring SSL certificates"
+echo "- Setting proper environment variables"
+echo "====================================================="
