@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, Search, Filter, UserCog, AlertCircle } from 'lucide-react';
+import { Users, Search, UserPlus, Filter, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,268 +11,130 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { ADUser } from '@/types';
 import ADUserCard from '@/components/ad-users/ADUserCard';
-import ADUserForm from '@/components/ad-users/ADUserForm';
-import { ADUser, ADGroup } from '@/types';
+import ImportADUsersModal from '@/components/ad-users/ImportADUsersModal';
 
-// Mock data for AD users
-const mockUsers: ADUser[] = [
-  {
-    id: '1',
-    username: 'jsmith',
-    displayName: 'John Smith',
-    email: 'john.smith@example.com',
-    firstName: 'John',
-    lastName: 'Smith',
-    jobTitle: 'Software Developer',
-    department: 'IT',
-    phoneNumber: '(555) 123-4567',
-    isEnabled: true,
-    groups: ['Domain Users', 'Developers', 'VPN Users'],
-    createdAt: new Date(2023, 1, 15),
-    lastModified: new Date(2023, 10, 5),
-    lastLogon: new Date(2023, 11, 28),
-    profilePictureUrl: '',
-  },
-  {
-    id: '2',
-    username: 'mjohnson',
-    displayName: 'Maria Johnson',
-    email: 'maria.johnson@example.com',
-    firstName: 'Maria',
-    lastName: 'Johnson',
-    jobTitle: 'Marketing Manager',
-    department: 'Marketing',
-    phoneNumber: '(555) 234-5678',
-    isEnabled: true,
-    groups: ['Domain Users', 'Marketing'],
-    createdAt: new Date(2023, 3, 10),
-    lastModified: new Date(2023, 9, 20),
-    lastLogon: new Date(2023, 11, 29),
-    profilePictureUrl: '',
-  },
-  {
-    id: '3',
-    username: 'dwilliams',
-    displayName: 'David Williams',
-    email: 'david.williams@example.com',
-    firstName: 'David',
-    lastName: 'Williams',
-    jobTitle: 'HR Specialist',
-    department: 'Human Resources',
-    phoneNumber: '(555) 345-6789',
-    isEnabled: false,
-    groups: ['Domain Users', 'HR Team'],
-    createdAt: new Date(2022, 11, 5),
-    lastModified: new Date(2023, 8, 15),
-    accountExpires: new Date(2023, 12, 31),
-    profilePictureUrl: '',
-  },
-  {
-    id: '4',
-    username: 'alee',
-    displayName: 'Alice Lee',
-    email: 'alice.lee@example.com',
-    firstName: 'Alice',
-    lastName: 'Lee',
-    jobTitle: 'Financial Analyst',
-    department: 'Finance',
-    phoneNumber: '(555) 456-7890',
-    isEnabled: true,
-    groups: ['Domain Users', 'Finance'],
-    createdAt: new Date(2023, 2, 20),
-    lastModified: new Date(2023, 10, 10),
-    lastLogon: new Date(2023, 11, 25),
-    profilePictureUrl: '',
-  },
-  {
-    id: '5',
-    username: 'rgarcia',
-    displayName: 'Robert Garcia',
-    email: 'robert.garcia@example.com',
-    firstName: 'Robert',
-    lastName: 'Garcia',
-    jobTitle: 'Sales Representative',
-    department: 'Sales',
-    phoneNumber: '(555) 567-8901',
-    isEnabled: true,
-    groups: ['Domain Users', 'Sales Team'],
-    createdAt: new Date(2023, 5, 12),
-    lastModified: new Date(2023, 11, 1),
-    lastLogon: new Date(2023, 11, 27),
-    profilePictureUrl: '',
-  },
-  {
-    id: '6',
-    username: 'lbrown',
-    displayName: 'Lisa Brown',
-    email: 'lisa.brown@example.com',
-    firstName: 'Lisa',
-    lastName: 'Brown',
-    jobTitle: 'Customer Support',
-    department: 'Support',
-    phoneNumber: '(555) 678-9012',
-    isEnabled: true,
-    groups: ['Domain Users', 'Help Desk'],
-    createdAt: new Date(2023, 4, 15),
-    lastModified: new Date(2023, 9, 15),
-    lastLogon: new Date(2023, 11, 28),
-    profilePictureUrl: '',
-  },
+// Mock data - in a real app, this would come from an API
+const mockADUsers: ADUser[] = [];
+
+// Mock domain controllers for import
+const mockDomainControllers = [
+  { id: '1', name: 'dc01.example.com' },
+  { id: '2', name: 'dc02.example.com' }
 ];
 
-// Mock data for AD groups
-const mockGroups: ADGroup[] = [
-  {
-    id: 'g1',
-    name: 'Domain Users',
-    description: 'All domain users',
-    members: 150,
-    category: 'Security',
-    scope: 'Global',
-    createdAt: new Date(2022, 1, 1),
-    lastModified: new Date(2023, 10, 10),
-  },
-  {
-    id: 'g2',
-    name: 'Developers',
-    description: 'Software development team',
-    members: 25,
-    category: 'Security',
-    scope: 'Global',
-    createdAt: new Date(2022, 2, 15),
-    lastModified: new Date(2023, 9, 5),
-  },
-  {
-    id: 'g3',
-    name: 'Marketing',
-    description: 'Marketing department',
-    members: 15,
-    category: 'Security',
-    scope: 'Global',
-    createdAt: new Date(2022, 3, 10),
-    lastModified: new Date(2023, 8, 20),
-  },
-  {
-    id: 'g4',
-    name: 'HR Team',
-    description: 'Human Resources team',
-    members: 8,
-    category: 'Security',
-    scope: 'Global',
-    createdAt: new Date(2022, 4, 5),
-    lastModified: new Date(2023, 7, 15),
-  },
-  {
-    id: 'g5',
-    name: 'Finance',
-    description: 'Finance department',
-    members: 12,
-    category: 'Security',
-    scope: 'Global',
-    createdAt: new Date(2022, 5, 20),
-    lastModified: new Date(2023, 10, 10),
-  },
+// Mock groups for import
+const mockGroups = [
+  { id: '1', name: 'IT Department' },
+  { id: '2', name: 'Sales' },
+  { id: '3', name: 'HR' },
+  { id: '4', name: 'Finance' }
 ];
 
 const ADUsers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [users, setUsers] = useState<ADUser[]>(mockUsers);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [editingUser, setEditingUser] = useState<ADUser | undefined>(undefined);
-  const [userToDelete, setUserToDelete] = useState<ADUser | undefined>(undefined);
-  const [userToResetPassword, setUserToResetPassword] = useState<ADUser | undefined>(undefined);
-  const [newPassword, setNewPassword] = useState('');
+  const [filterGroup, setFilterGroup] = useState('all');
+  const [users, setUsers] = useState<ADUser[]>(mockADUsers);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
+  // Filter users based on search query and group filter
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.department && user.department.toLowerCase().includes(searchQuery.toLowerCase()));
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
       
-    const matchesStatus = 
-      filterStatus === 'all' ||
-      (filterStatus === 'enabled' && user.isEnabled) ||
-      (filterStatus === 'disabled' && !user.isEnabled);
+    const matchesGroup = 
+      filterGroup === 'all' ||
+      user.groups.includes(filterGroup);
       
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesGroup;
   });
 
-  const handleEditUser = (data: any) => {
-    if (!editingUser) return;
-
-    const updatedUsers = users.map(user => 
-      user.id === editingUser.id 
-        ? { 
-            ...user, 
-            ...data,
-            lastModified: new Date(),
-          } 
-        : user
-    );
-
-    setUsers(updatedUsers);
-    setEditingUser(undefined);
-    toast({
-      title: "User Updated",
-      description: `${data.displayName} has been updated.`,
-    });
-  };
-
-  const handleDeleteUser = () => {
-    if (!userToDelete) return;
-
-    const updatedUsers = users.filter(user => user.id !== userToDelete.id);
-    setUsers(updatedUsers);
-    setUserToDelete(undefined);
-    toast({
-      title: "User Deleted",
-      description: `${userToDelete.displayName} has been removed.`,
-      variant: "destructive",
-    });
-  };
-
-  const handleResetPassword = () => {
-    if (!userToResetPassword || !newPassword) return;
-
-    toast({
-      title: "Password Reset",
-      description: `Password for ${userToResetPassword.displayName} has been reset.`,
-    });
+  const handleImportUsers = (data: any) => {
+    // In a real application, this would make an API call to import users from AD
+    console.log('Import data:', data);
     
-    setUserToResetPassword(undefined);
-    setNewPassword('');
+    // For demo purposes, we'll create some sample users
+    const importedUsers: ADUser[] = [
+      {
+        id: '1',
+        username: 'jdoe',
+        displayName: 'John Doe',
+        email: 'john.doe@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        jobTitle: 'Software Developer',
+        department: 'IT',
+        phoneNumber: '555-1234',
+        isEnabled: true,
+        groups: ['IT Department'],
+        createdAt: new Date(),
+        lastModified: new Date(),
+        lastLogon: new Date(Date.now() - 24 * 60 * 60 * 1000) // yesterday
+      },
+      {
+        id: '2',
+        username: 'asmith',
+        displayName: 'Alice Smith',
+        email: 'alice.smith@example.com',
+        firstName: 'Alice',
+        lastName: 'Smith',
+        jobTitle: 'HR Manager',
+        department: 'Human Resources',
+        phoneNumber: '555-5678',
+        isEnabled: true,
+        groups: ['HR'],
+        createdAt: new Date(),
+        lastModified: new Date(),
+        lastLogon: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
+      },
+      {
+        id: '3',
+        username: 'rjohnson',
+        displayName: 'Robert Johnson',
+        email: 'robert.johnson@example.com',
+        firstName: 'Robert',
+        lastName: 'Johnson',
+        jobTitle: 'Sales Director',
+        department: 'Sales',
+        phoneNumber: '555-9012',
+        isEnabled: true,
+        groups: ['Sales'],
+        createdAt: new Date(),
+        lastModified: new Date(),
+        lastLogon: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+      }
+    ];
+    
+    // Add the imported users to our state
+    setUsers([...users, ...importedUsers]);
   };
-
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">AD Users</h1>
-        <Button onClick={() => navigate('/ad-users/create')}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Create User
-        </Button>
+        <div className="flex items-center gap-3">
+          <Users className="h-6 w-6 text-primary" />
+          <h1 className="text-3xl font-bold tracking-tight">Active Directory Users</h1>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Import
+          </Button>
+          <Button onClick={() => navigate('/ad-users/create')}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Create User
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 md:items-center">
@@ -288,14 +150,16 @@ const ADUsers = () => {
         
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-muted-foreground" />
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select value={filterGroup} onValueChange={setFilterGroup}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder="Filter by group" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Users</SelectItem>
-              <SelectItem value="enabled">Enabled Users</SelectItem>
-              <SelectItem value="disabled">Disabled Users</SelectItem>
+              <SelectItem value="all">All Groups</SelectItem>
+              <SelectItem value="IT Department">IT Department</SelectItem>
+              <SelectItem value="Sales">Sales</SelectItem>
+              <SelectItem value="HR">HR</SelectItem>
+              <SelectItem value="Finance">Finance</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -306,117 +170,41 @@ const ADUsers = () => {
           <Users className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium">No users found</h3>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
-            {searchQuery || filterStatus !== 'all'
+            {searchQuery || filterGroup !== 'all'
               ? "No users match your search criteria" 
               : "You haven't added any Active Directory users yet"}
           </p>
-          {!searchQuery && filterStatus === 'all' && (
-            <Button onClick={() => navigate('/ad-users/create')}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Create Your First User
-            </Button>
+          {!searchQuery && filterGroup === 'all' && (
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsImportModalOpen(true)}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Import Users
+              </Button>
+              <Button onClick={() => navigate('/ad-users/create')}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create User
+              </Button>
+            </div>
           )}
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredUsers.map((user) => (
-            <ADUserCard
-              key={user.id}
-              user={user}
-              onEdit={setEditingUser}
-              onDelete={setUserToDelete}
-              onResetPassword={setUserToResetPassword}
-            />
+            <ADUserCard key={user.id} user={user} />
           ))}
         </div>
       )}
 
-      {/* Edit User Dialog */}
-      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(undefined)}>
-        <DialogContent className="sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update Active Directory user information
-            </DialogDescription>
-          </DialogHeader>
-          {editingUser && (
-            <ADUserForm 
-              user={editingUser}
-              groups={mockGroups}
-              onSubmit={handleEditUser} 
-              onCancel={() => setEditingUser(undefined)} 
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(undefined)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              Confirm Deletion
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this user? This action cannot be undone.
-              {userToDelete?.displayName && (
-                <span className="block mt-2 font-medium">"{userToDelete.displayName}"</span>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteUser}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reset Password Dialog */}
-      <Dialog open={!!userToResetPassword} onOpenChange={(open) => !open && setUserToResetPassword(undefined)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserCog className="h-5 w-5" />
-              Reset Password
-            </DialogTitle>
-            <DialogDescription>
-              Set a new password for {userToResetPassword?.displayName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <label htmlFor="new-password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                New Password
-              </label>
-              <Input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-              />
-              <p className="text-sm text-muted-foreground">
-                Password must be at least 8 characters long
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setUserToResetPassword(undefined)}>
-                Cancel
-              </Button>
-              <Button onClick={handleResetPassword} disabled={newPassword.length < 8}>
-                Reset Password
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ImportADUsersModal
+        open={isImportModalOpen}
+        onOpenChange={setIsImportModalOpen}
+        onImport={handleImportUsers}
+        domainControllers={mockDomainControllers}
+        groups={mockGroups}
+      />
     </div>
   );
 };

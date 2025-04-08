@@ -125,6 +125,12 @@ DB_NAME=${DB_NAME}
 DB_USER=${DB_USER}
 DB_PASSWORD=${DB_PASSWORD}
 
+# Microsoft 365 Configuration
+M365_TENANT_ID=
+M365_CLIENT_ID=
+M365_CLIENT_SECRET=
+M365_REDIRECT_URI=http://localhost:8080/auth/microsoft/callback
+
 # App Configuration
 APP_PORT=8080
 APP_URL=http://localhost:8080
@@ -155,6 +161,53 @@ CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     key TEXT NOT NULL UNIQUE,
     value TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS m365_users (
+    id TEXT PRIMARY KEY,
+    display_name TEXT NOT NULL,
+    user_principal_name TEXT NOT NULL UNIQUE,
+    mail TEXT,
+    job_title TEXT,
+    department TEXT,
+    account_enabled INTEGER DEFAULT 1,
+    created_date_time TEXT,
+    last_sign_in TEXT,
+    data JSON,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS m365_licenses (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    total INTEGER DEFAULT 0,
+    assigned INTEGER DEFAULT 0,
+    unit_price REAL DEFAULT 0,
+    renewal_date TEXT,
+    data JSON,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS m365_user_licenses (
+    user_id TEXT,
+    license_id TEXT,
+    assigned_date TEXT DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, license_id),
+    FOREIGN KEY (user_id) REFERENCES m365_users (id),
+    FOREIGN KEY (license_id) REFERENCES m365_licenses (id)
+);
+
+CREATE TABLE IF NOT EXISTS m365_tenant_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT,
+    client_id TEXT,
+    client_secret TEXT,
+    redirect_uri TEXT,
+    enabled INTEGER DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
@@ -193,6 +246,54 @@ CREATE TABLE IF NOT EXISTS settings (
     id SERIAL PRIMARY KEY,
     key VARCHAR(255) NOT NULL UNIQUE,
     value TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Microsoft 365 Tables
+CREATE TABLE IF NOT EXISTS m365_users (
+    id VARCHAR(255) PRIMARY KEY,
+    display_name VARCHAR(255) NOT NULL,
+    user_principal_name VARCHAR(255) NOT NULL UNIQUE,
+    mail VARCHAR(255),
+    job_title VARCHAR(255),
+    department VARCHAR(255),
+    account_enabled BOOLEAN DEFAULT TRUE,
+    created_date_time TIMESTAMP,
+    last_sign_in TIMESTAMP,
+    data JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS m365_licenses (
+    id VARCHAR(255) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    total INTEGER DEFAULT 0,
+    assigned INTEGER DEFAULT 0,
+    unit_price DECIMAL(10,2) DEFAULT 0,
+    renewal_date DATE,
+    data JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS m365_user_licenses (
+    user_id VARCHAR(255),
+    license_id VARCHAR(255),
+    assigned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, license_id),
+    FOREIGN KEY (user_id) REFERENCES m365_users (id),
+    FOREIGN KEY (license_id) REFERENCES m365_licenses (id)
+);
+
+CREATE TABLE IF NOT EXISTS m365_tenant_config (
+    id SERIAL PRIMARY KEY,
+    tenant_id VARCHAR(255),
+    client_id VARCHAR(255),
+    client_secret VARCHAR(255),
+    redirect_uri VARCHAR(255),
+    enabled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

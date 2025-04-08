@@ -94,7 +94,18 @@ The application supports multiple database options:
   DB_PASSWORD=yourpassword
   ```
 
-Run the SQL initialization script provided during installation to set up your database schema.
+During installation, the script will create the necessary tables in your database. If you're setting up the database manually, use the SQL initialization scripts provided in the installation guide.
+
+## Database Schema
+
+The application creates the following tables in your database:
+
+- `users` - Web application users
+- `settings` - Application settings
+- `m365_users` - Microsoft 365 users
+- `m365_licenses` - Microsoft 365 licenses
+- `m365_user_licenses` - Many-to-many relationship between users and licenses
+- `m365_tenant_config` - Microsoft 365 tenant configuration
 
 ## Active Directory Configuration
 
@@ -111,6 +122,34 @@ AD_BASE_DN=DC=example,DC=com
 ```
 
 2. Restart the application for the changes to take effect
+
+## Microsoft 365 Configuration
+
+To enable Microsoft 365 integration, you need to register an application in the Azure Portal:
+
+1. Go to the [Azure Portal](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
+2. Register a new application
+3. Set up the required API permissions:
+   - Microsoft Graph API: User.Read.All, User.ReadWrite.All, Directory.Read.All, Directory.ReadWrite.All, Organization.Read.All, SubscriptionLicense.Read.All
+4. Create a client secret
+5. Add a redirect URI to your application (e.g., http://localhost:8080/auth/microsoft/callback)
+6. Configure the application in the Azure AD Manager web interface or directly in the `.env.local` file:
+
+```
+M365_TENANT_ID=your-tenant-id
+M365_CLIENT_ID=your-client-id
+M365_CLIENT_SECRET=your-client-secret
+M365_REDIRECT_URI=http://localhost:8080/auth/microsoft/callback
+```
+
+## Importing Active Directory and Microsoft 365 Users
+
+The application supports importing users from:
+
+1. **Active Directory** - Connect to your on-premises AD server and import users
+2. **Microsoft 365** - Import users from your Microsoft 365 tenant after configuring the integration
+
+Both import options are available through the web interface once the respective connections are configured.
 
 ## Troubleshooting
 
@@ -143,7 +182,13 @@ If you encounter issues during installation or deployment:
    ping your-ad-server
    ```
 
-5. **Application Logs**: Check the console output for any error messages
+5. **Microsoft 365 Connection**: Verify your tenant configuration
+   ```
+   # Check that the redirect URI matches what's configured in Azure Portal
+   # Verify that API permissions have been granted admin consent
+   ```
+
+6. **Application Logs**: Check the console output for any error messages
 
 For additional support, please contact your system administrator.
 
@@ -155,3 +200,4 @@ For additional support, please contact your system administrator.
 - Regularly update the application and its dependencies
 - Use a secure database password and restrict database access
 - Consider using environment variables instead of .env files in production
+- Store Microsoft 365 client secrets securely and rotate them regularly
