@@ -21,6 +21,8 @@ import SystemSettings from "./pages/SystemSettings";
 import AuditLogs from "./pages/AuditLogs";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,8 @@ const AppRoutes = () => {
         <Route path="/sso" element={<SSOConfiguration />} />
         <Route path="/settings" element={<SystemSettings />} />
         <Route path="/audit" element={<AuditLogs />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -58,6 +58,54 @@ fi
 echo "Installing dependencies..."
 npm install
 
+# Database Configuration
+echo "====================================================="
+echo "Database Configuration"
+echo "====================================================="
+echo "By default, Azure AD Manager uses SQLite for simplicity."
+echo "You can configure the following database options:"
+echo ""
+echo "1. SQLite (default, no additional installation required)"
+echo "2. MySQL"
+echo "3. PostgreSQL"
+echo ""
+read -p "Choose database type (1-3, default: 1): " DB_CHOICE
+
+# Set default values
+DB_TYPE="sqlite"
+DB_PATH="../database/azure-ad-manager.db"
+DB_HOST="localhost"
+DB_PORT=""
+DB_NAME=""
+DB_USER=""
+DB_PASSWORD=""
+
+case $DB_CHOICE in
+    2)
+        DB_TYPE="mysql"
+        read -p "MySQL Host (default: localhost): " DB_HOST_INPUT
+        DB_HOST=${DB_HOST_INPUT:-$DB_HOST}
+        read -p "MySQL Port (default: 3306): " DB_PORT_INPUT
+        DB_PORT=${DB_PORT_INPUT:-"3306"}
+        read -p "MySQL Database Name: " DB_NAME
+        read -p "MySQL Username: " DB_USER
+        read -p "MySQL Password: " DB_PASSWORD
+        ;;
+    3)
+        DB_TYPE="postgres"
+        read -p "PostgreSQL Host (default: localhost): " DB_HOST_INPUT
+        DB_HOST=${DB_HOST_INPUT:-$DB_HOST}
+        read -p "PostgreSQL Port (default: 5432): " DB_PORT_INPUT
+        DB_PORT=${DB_PORT_INPUT:-"5432"}
+        read -p "PostgreSQL Database Name: " DB_NAME
+        read -p "PostgreSQL Username: " DB_USER
+        read -p "PostgreSQL Password: " DB_PASSWORD
+        ;;
+    *)
+        echo "Using SQLite database in ${DB_PATH}"
+        ;;
+esac
+
 # Create .env.local file for configuration
 echo "Creating configuration file..."
 cat > .env.local << EOL
@@ -69,22 +117,29 @@ AD_PASSWORD=password
 AD_BASE_DN=DC=example,DC=com
 
 # Database Configuration
-DB_TYPE=sqlite
-DB_PATH=../database/azure-ad-manager.db
+DB_TYPE=${DB_TYPE}
+DB_PATH=${DB_PATH}
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT}
+DB_NAME=${DB_NAME}
+DB_USER=${DB_USER}
+DB_PASSWORD=${DB_PASSWORD}
 
 # App Configuration
 APP_PORT=8080
 APP_URL=http://localhost:8080
 EOL
 
-echo "Setting up SQLite database..."
-# Check if sqlite3 is installed
-if ! command -v sqlite3 &> /dev/null; then
-    echo "Warning: sqlite3 command not found. Database initialization skipped."
-    echo "Please install sqlite3 to initialize the database manually."
-else
-    # Initialize SQLite database with basic schema
-    sqlite3 ../database/azure-ad-manager.db << EOF
+# Initialize database based on type
+if [ "$DB_TYPE" = "sqlite" ]; then
+    echo "Setting up SQLite database..."
+    # Check if sqlite3 is installed
+    if ! command -v sqlite3 &> /dev/null; then
+        echo "Warning: sqlite3 command not found. Database initialization skipped."
+        echo "Please install sqlite3 to initialize the database manually."
+    else
+        # Initialize SQLite database with basic schema
+        sqlite3 ../database/azure-ad-manager.db << EOF
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
@@ -117,7 +172,48 @@ INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_ssl', 'false');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('from_email', 'noreply@example.com');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('session_timeout', '15');
 EOF
-    echo "✓ Database initialized"
+        echo "✓ Database initialized"
+    fi
+else
+    echo "Please run the following SQL script to initialize your ${DB_TYPE} database:"
+    cat << EOF
+-- Create tables
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    is_admin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+    id SERIAL PRIMARY KEY,
+    key VARCHAR(255) NOT NULL UNIQUE,
+    value TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default admin user
+INSERT INTO users (username, password, email, first_name, last_name, is_admin)
+VALUES ('admin', 'admin', 'admin@example.com', 'Admin', 'User', TRUE)
+ON CONFLICT (username) DO NOTHING;
+
+-- Insert default settings
+INSERT INTO settings (key, value)
+VALUES 
+    ('smtp_server', ''),
+    ('smtp_port', '25'),
+    ('smtp_username', ''),
+    ('smtp_password', ''),
+    ('smtp_ssl', 'false'),
+    ('from_email', 'noreply@example.com'),
+    ('session_timeout', '15')
+ON CONFLICT (key) DO NOTHING;
+EOF
 fi
 
 # Create a special start script that avoids ESM issues

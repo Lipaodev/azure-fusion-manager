@@ -9,7 +9,10 @@ This document provides comprehensive instructions for installing and deploying t
 - npm v7 or higher
 - 2GB RAM minimum (4GB recommended)
 - 1GB free disk space
-- SQLite3 (for the default database setup)
+- One of the following databases:
+  - SQLite3 (default, included)
+  - MySQL 5.7+ or MariaDB 10.2+
+  - PostgreSQL 10+
 
 ## Installation Options
 
@@ -19,7 +22,7 @@ This document provides comprehensive instructions for installing and deploying t
 2. Extract the zip file: `unzip azure-ad-manager.zip`
 3. Make the install script executable: `chmod +x install.sh`
 4. Run the script: `./install.sh`
-5. Follow the on-screen instructions
+5. Follow the on-screen instructions to choose your database and enter configuration
 6. Start the application with: `node start.js`
 
 ### Option 2: Manual Installation
@@ -30,7 +33,7 @@ If you prefer to install manually:
 2. Navigate to the extracted directory: `cd azure-ad-manager`
 3. Install dependencies: `npm install`
 4. Create a `.env.local` file with your configuration settings
-5. Initialize the SQLite database manually
+5. Initialize your chosen database manually with the schema (see Database Configuration)
 6. Start the development server: `npm run dev`
 
 ## Production Deployment
@@ -50,11 +53,48 @@ For a more robust production deployment:
 
 ## Database Configuration
 
-The default installation uses SQLite for simplicity. For production use, consider:
+The application supports multiple database options:
 
-1. Using a more robust database like PostgreSQL or MySQL
-2. Setting up proper database backups
-3. Configuring database users with appropriate permissions
+### SQLite (Default)
+
+- Suitable for small deployments and testing
+- No additional installation required
+- Data stored in `database/azure-ad-manager.db`
+- Configuration in `.env.local`:
+  ```
+  DB_TYPE=sqlite
+  DB_PATH=../database/azure-ad-manager.db
+  ```
+
+### MySQL / MariaDB
+
+- Suitable for medium-sized deployments
+- Requires MySQL/MariaDB server installed
+- Configuration in `.env.local`:
+  ```
+  DB_TYPE=mysql
+  DB_HOST=localhost
+  DB_PORT=3306
+  DB_NAME=azureadmanager
+  DB_USER=yourusername
+  DB_PASSWORD=yourpassword
+  ```
+
+### PostgreSQL
+
+- Suitable for larger deployments
+- Requires PostgreSQL server installed
+- Configuration in `.env.local`:
+  ```
+  DB_TYPE=postgres
+  DB_HOST=localhost
+  DB_PORT=5432
+  DB_NAME=azureadmanager
+  DB_USER=yourusername
+  DB_PASSWORD=yourpassword
+  ```
+
+Run the SQL initialization script provided during installation to set up your database schema.
 
 ## Active Directory Configuration
 
@@ -86,9 +126,16 @@ If you encounter issues during installation or deployment:
    chmod +x install.sh
    ```
 
-3. **Database Errors**: Check that SQLite3 is installed and the database directory is writable
+3. **Database Errors**: Check that your database is properly installed and accessible
    ```
+   # For SQLite
    sqlite3 --version
+   
+   # For MySQL
+   mysql --version
+   
+   # For PostgreSQL
+   psql --version
    ```
 
 4. **Network Issues**: Verify connectivity to your Active Directory servers
@@ -106,3 +153,5 @@ For additional support, please contact your system administrator.
 - Use HTTPS in production environments
 - Restrict access to the server running the application
 - Regularly update the application and its dependencies
+- Use a secure database password and restrict database access
+- Consider using environment variables instead of .env files in production
