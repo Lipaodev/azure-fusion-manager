@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavbarProps {
   sidebarOpen: boolean;
@@ -34,9 +35,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logout } = useAuth();
   const [notifications, setNotifications] = React.useState(3);
 
   const handleLogout = () => {
+    logout();
     toast({
       title: "Logout successful",
       description: "You have been logged out of the system",
