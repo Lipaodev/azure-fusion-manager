@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import classNames from "classnames";
@@ -22,11 +21,10 @@ import {
 } from "lucide-react";
 
 interface SidebarProps {
-  isSidebarOpen: boolean;
-  toggleSidebar: () => void;
+  open: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
+const Sidebar: React.FC<SidebarProps> = ({ open }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -91,14 +89,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
       className={classNames(
         "bg-white dark:bg-gray-800 transition-all duration-300 border-r dark:border-gray-700 h-full fixed left-0 top-0 z-40 flex flex-col",
         {
-          "w-64": isSidebarOpen,
-          "w-16": !isSidebarOpen,
+          "w-64": open,
+          "w-16": !open,
         }
       )}
     >
       <div className="py-4 px-3 flex flex-col h-full">
         <div className="flex items-center justify-between mb-6">
-          {isSidebarOpen ? (
+          {open ? (
             <span className="text-xl font-bold text-gray-800 dark:text-white">
               AD Manager
             </span>
@@ -107,25 +105,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
               AD
             </span>
           )}
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
-          >
-            {isSidebarOpen ? (
-              <PanelLeftClose className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            ) : (
-              <PanelLeftOpen className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            )}
-          </button>
         </div>
 
         {/* User info */}
         {user && (
           <div className={classNames(
             "mb-6 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg",
-            { "text-center": !isSidebarOpen }
+            { "text-center": !open }
           )}>
-            {isSidebarOpen ? (
+            {open ? (
               <div className="flex flex-col">
                 <span className="font-medium text-sm">{user.displayName}</span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">{user.role}</span>
@@ -143,7 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
             if ("items" in item) {
               return (
                 <div key={item.name} className="mb-4">
-                  {isSidebarOpen && (
+                  {open && (
                     <h3 className="mb-2 px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {item.name}
                     </h3>
@@ -159,13 +147,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
                             {
                               "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100": isActive,
                               "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700": !isActive,
-                              "justify-center": !isSidebarOpen,
+                              "justify-center": !open,
                             }
                           )
                         }
                       >
-                        {subItem.icon && <subItem.icon className={classNames("h-5 w-5", { "mr-3": isSidebarOpen })} />}
-                        {isSidebarOpen && <span>{subItem.name}</span>}
+                        {subItem.icon && <subItem.icon className={classNames("h-5 w-5", { "mr-3": open })} />}
+                        {open && <span>{subItem.name}</span>}
                       </NavLink>
                     ))}
                   </div>
@@ -182,13 +170,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
                       {
                         "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100": isActive,
                         "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700": !isActive,
-                        "justify-center": !isSidebarOpen,
+                        "justify-center": !open,
                       }
                     )
                   }
                 >
-                  {item.icon && <item.icon className={classNames("h-5 w-5", { "mr-3": isSidebarOpen })} />}
-                  {isSidebarOpen && <span>{item.name}</span>}
+                  {item.icon && <item.icon className={classNames("h-5 w-5", { "mr-3": open })} />}
+                  {open && <span>{item.name}</span>}
                 </NavLink>
               );
             }
@@ -200,11 +188,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
           onClick={handleLogout}
           className={classNames(
             "flex items-center px-3 py-2 text-sm rounded-lg transition-colors mt-auto text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
-            { "justify-center": !isSidebarOpen }
+            { "justify-center": !open }
           )}
         >
-          <LogOut className={classNames("h-5 w-5", { "mr-3": isSidebarOpen })} />
-          {isSidebarOpen && <span>Logout</span>}
+          <LogOut className={classNames("h-5 w-5", { "mr-3": open })} />
+          {open && <span>Logout</span>}
         </button>
       </div>
     </aside>

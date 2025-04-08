@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
+import Sidebar from './Sidebar';
 import { Navbar } from './Navbar';
 import { MoonIcon, SunIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
