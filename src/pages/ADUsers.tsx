@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Search, UserPlus, Filter, Upload } from 'lucide-react';
@@ -56,7 +55,6 @@ const ADUsers = () => {
   });
 
   const handleImportUsers = (data: any) => {
-    // In a real application, this would make an API call to import users from AD
     console.log('Import data:', data);
     
     // For demo purposes, we'll create some sample users
@@ -113,6 +111,33 @@ const ADUsers = () => {
     
     // Add the imported users to our state
     setUsers([...users, ...importedUsers]);
+  };
+
+  // Handler for editing a user
+  const handleEditUser = (user: ADUser) => {
+    navigate(`/ad-users/edit/${user.id}`);
+    toast({
+      title: "Edit User",
+      description: `Editing ${user.displayName}`,
+    });
+  };
+
+  // Handler for deleting a user
+  const handleDeleteUser = (user: ADUser) => {
+    setUsers(users.filter(u => u.id !== user.id));
+    toast({
+      title: "User Deleted",
+      description: `${user.displayName} has been removed`,
+      variant: "destructive",
+    });
+  };
+
+  // Handler for resetting a user's password
+  const handleResetPassword = (user: ADUser) => {
+    toast({
+      title: "Password Reset",
+      description: `Password reset initiated for ${user.displayName}`,
+    });
   };
   
   return (
@@ -193,7 +218,13 @@ const ADUsers = () => {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredUsers.map((user) => (
-            <ADUserCard key={user.id} user={user} />
+            <ADUserCard 
+              key={user.id} 
+              user={user} 
+              onEdit={handleEditUser}
+              onDelete={handleDeleteUser}
+              onResetPassword={handleResetPassword}
+            />
           ))}
         </div>
       )}
