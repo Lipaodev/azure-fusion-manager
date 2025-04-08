@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Search, UserPlus, Filter, Upload } from 'lucide-react';
@@ -57,60 +58,82 @@ const ADUsers = () => {
   const handleImportUsers = (data: any) => {
     console.log('Import data:', data);
     
-    // For demo purposes, we'll create some sample users
-    const importedUsers: ADUser[] = [
-      {
-        id: '1',
-        username: 'jdoe',
-        displayName: 'John Doe',
-        email: 'john.doe@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        jobTitle: 'Software Developer',
-        department: 'IT',
-        phoneNumber: '555-1234',
-        isEnabled: true,
-        groups: ['IT Department'],
-        createdAt: new Date(),
-        lastModified: new Date(),
-        lastLogon: new Date(Date.now() - 24 * 60 * 60 * 1000) // yesterday
-      },
-      {
-        id: '2',
-        username: 'asmith',
-        displayName: 'Alice Smith',
-        email: 'alice.smith@example.com',
-        firstName: 'Alice',
-        lastName: 'Smith',
-        jobTitle: 'HR Manager',
-        department: 'Human Resources',
-        phoneNumber: '555-5678',
-        isEnabled: true,
-        groups: ['HR'],
-        createdAt: new Date(),
-        lastModified: new Date(),
-        lastLogon: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
-      },
-      {
-        id: '3',
-        username: 'rjohnson',
-        displayName: 'Robert Johnson',
-        email: 'robert.johnson@example.com',
-        firstName: 'Robert',
-        lastName: 'Johnson',
-        jobTitle: 'Sales Director',
-        department: 'Sales',
-        phoneNumber: '555-9012',
-        isEnabled: true,
-        groups: ['Sales'],
-        createdAt: new Date(),
-        lastModified: new Date(),
-        lastLogon: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
-      }
-    ];
+    // Create different sample items based on the importType
+    if (data.importType === 'users' || data.importType === 'all') {
+      // For demo purposes, we'll create some sample users
+      const importedUsers: ADUser[] = [
+        {
+          id: '1',
+          username: 'jdoe',
+          displayName: 'John Doe',
+          email: 'john.doe@example.com',
+          firstName: 'John',
+          lastName: 'Doe',
+          jobTitle: 'Software Developer',
+          department: 'IT',
+          phoneNumber: '555-1234',
+          isEnabled: true,
+          groups: ['IT Department'],
+          createdAt: new Date(),
+          lastModified: new Date(),
+          lastLogon: new Date(Date.now() - 24 * 60 * 60 * 1000) // yesterday
+        },
+        {
+          id: '2',
+          username: 'asmith',
+          displayName: 'Alice Smith',
+          email: 'alice.smith@example.com',
+          firstName: 'Alice',
+          lastName: 'Smith',
+          jobTitle: 'HR Manager',
+          department: 'Human Resources',
+          phoneNumber: '555-5678',
+          isEnabled: true,
+          groups: ['HR'],
+          createdAt: new Date(),
+          lastModified: new Date(),
+          lastLogon: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
+        },
+        {
+          id: '3',
+          username: 'rjohnson',
+          displayName: 'Robert Johnson',
+          email: 'robert.johnson@example.com',
+          firstName: 'Robert',
+          lastName: 'Johnson',
+          jobTitle: 'Sales Director',
+          department: 'Sales',
+          phoneNumber: '555-9012',
+          isEnabled: true,
+          groups: ['Sales'],
+          createdAt: new Date(),
+          lastModified: new Date(),
+          lastLogon: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+        }
+      ];
+      
+      // Add the imported users to our state
+      setUsers(prevUsers => {
+        const newUsers = [...prevUsers];
+        importedUsers.forEach(user => {
+          // Check if user already exists (by id or username)
+          const existingIndex = newUsers.findIndex(u => u.id === user.id || u.username === user.username);
+          if (existingIndex >= 0) {
+            // Update existing user
+            newUsers[existingIndex] = { ...user };
+          } else {
+            // Add new user
+            newUsers.push(user);
+          }
+        });
+        return newUsers;
+      });
+    }
     
-    // Add the imported users to our state
-    setUsers([...users, ...importedUsers]);
+    toast({
+      title: "Import Successful",
+      description: `Successfully imported ${data.importType} from Active Directory`,
+    });
   };
 
   // Handler for editing a user
