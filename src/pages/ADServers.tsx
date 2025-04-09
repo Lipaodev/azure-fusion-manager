@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PlusCircle, AlertCircle, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,58 +21,21 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import ADServerForm from '@/components/ad-servers/ADServerForm';
 import ADServerCard from '@/components/ad-servers/ADServerCard';
 import { ADServer } from '@/types';
 
-// Mock data for AD servers
-const mockServers: ADServer[] = [
-  {
-    id: '1',
-    name: 'Primary Domain Controller',
-    domain: 'example.com',
-    server: 'dc01.example.com',
-    port: 389,
-    useSSL: true,
-    username: 'admin@example.com',
-    password: '********',
-    isConnected: true,
-    lastConnectionTime: new Date(Date.now() - 1000 * 60 * 30),
-  },
-  {
-    id: '2',
-    name: 'Secondary Domain Controller',
-    domain: 'example.com',
-    server: 'dc02.example.com',
-    port: 636,
-    useSSL: true,
-    username: 'admin@example.com',
-    password: '********',
-    isConnected: true,
-    lastConnectionTime: new Date(Date.now() - 1000 * 60 * 15),
-  },
-  {
-    id: '3',
-    name: 'Remote Office DC',
-    domain: 'branch.example.com',
-    server: 'remote-dc.branch.example.com',
-    port: 389,
-    useSSL: false,
-    username: 'admin@branch.example.com',
-    password: '********',
-    isConnected: false,
-    lastConnectionTime: new Date(Date.now() - 1000 * 60 * 60 * 24),
-  },
-];
+const initialServers: ADServer[] = [];
 
 const ADServers = () => {
   const { toast } = useToast();
-  const [servers, setServers] = useState<ADServer[]>(mockServers);
+  const [servers, setServers] = useState<ADServer[]>(initialServers);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddServerOpen, setIsAddServerOpen] = useState(false);
   const [editingServer, setEditingServer] = useState<ADServer | undefined>(undefined);
   const [serverToDelete, setServerToDelete] = useState<ADServer | undefined>(undefined);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredServers = servers.filter(server => 
     server.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,6 +54,7 @@ const ADServers = () => {
       username: data.username,
       password: data.password,
       isConnected: false,
+      lastConnectionTime: new Date(),
     };
 
     setServers([...servers, newServer]);
@@ -105,58 +68,89 @@ const ADServers = () => {
   const handleEditServer = (data: any) => {
     if (!editingServer) return;
 
-    const updatedServers = servers.map(server => 
-      server.id === editingServer.id 
-        ? { ...server, ...data } 
-        : server
-    );
+    try {
+      const updatedServers = servers.map(server => 
+        server.id === editingServer.id 
+          ? { ...server, ...data } 
+          : server
+      );
 
-    setServers(updatedServers);
-    setEditingServer(undefined);
-    toast({
-      title: "Server Updated",
-      description: `${data.name} has been updated.`,
-    });
+      setServers(updatedServers);
+      setEditingServer(undefined);
+      toast({
+        title: "Server Updated",
+        description: `${data.name} has been updated.`,
+      });
+    } catch (error) {
+      console.error("Error updating server:", error);
+      toast({
+        title: "Update Failed",
+        description: "An error occurred while updating the server",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteServer = () => {
     if (!serverToDelete) return;
 
-    const updatedServers = servers.filter(server => server.id !== serverToDelete.id);
-    setServers(updatedServers);
-    setServerToDelete(undefined);
-    toast({
-      title: "Server Deleted",
-      description: `${serverToDelete.name} has been removed.`,
-      variant: "destructive",
-    });
+    try {
+      setIsDeleting(true);
+      const updatedServers = servers.filter(server => server.id !== serverToDelete.id);
+      setServers(updatedServers);
+      
+      toast({
+        title: "Server Deleted",
+        description: `${serverToDelete.name} has been removed.`,
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Error deleting server:", error);
+      toast({
+        title: "Deletion Failed",
+        description: "An error occurred while deleting the server",
+        variant: "destructive",
+      });
+    } finally {
+      setServerToDelete(undefined);
+      setIsDeleting(false);
+    }
   };
 
   const handleTestConnection = (server: ADServer) => {
     // In a real application, this would actually test the connection
     const success = Math.random() > 0.3; // Simulate success/failure
     
-    const updatedServers = servers.map(s => 
-      s.id === server.id 
-        ? { 
-            ...s, 
-            isConnected: success, 
-            lastConnectionTime: new Date() 
-          } 
-        : s
-    );
-    
-    setServers(updatedServers);
-    
-    if (success) {
+    try {
+      const updatedServers = servers.map(s => 
+        s.id === server.id 
+          ? { 
+              ...s, 
+              isConnected: success, 
+              lastConnectionTime: new Date() 
+            } 
+          : s
+      );
+      
+      setServers(updatedServers);
+      
+      if (success) {
+        toast({
+          title: "Connection Successful",
+          description: `Successfully connected to ${server.name}.`,
+        });
+      } else {
+        toast({
+          title: "Connection Failed",
+          description: `Failed to connect to ${server.name}. Please check your server details.`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error testing connection:", error);
       toast({
-        title: "Connection Successful",
-        description: `Successfully connected to ${server.name}.`,
-      });
-    } else {
-      toast({
-        title: "Connection Failed",
-        description: `Failed to connect to ${server.name}. Please check your server details.`,
+        title: "Connection Test Failed",
+        description: "An error occurred during the connection test",
         variant: "destructive",
       });
     }

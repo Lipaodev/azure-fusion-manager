@@ -1,36 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, UserPlus, Group, Server, Cloud, AlertTriangle, ActivitySquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
-const stats = {
-  adUsers: 375,
-  adGroups: 48,
-  adComputers: 127,
-  adServers: 3,
-  o365Users: 310,
+const initialStats = {
+  adUsers: 0,
+  adGroups: 0,
+  adComputers: 0,
+  adServers: 0,
+  o365Users: 0,
   o365Licenses: {
-    total: 400,
-    assigned: 310,
-    available: 90
+    total: 0,
+    assigned: 0,
+    available: 0
   },
   alerts: [
-    { id: 1, message: "5 user accounts will expire in the next 7 days", severity: "warning" },
-    { id: 2, message: "3 Microsoft 365 licenses are not assigned", severity: "info" },
-    { id: 3, message: "Password reset requested for user john.doe", severity: "info" }
+    { id: 1, message: "No alerts found", severity: "info" }
   ],
-  recentActivities: [
-    { id: 1, action: "User Created", target: "sarah.johnson", time: "2 hours ago", actor: "admin" },
-    { id: 2, action: "Group Modified", target: "Marketing Team", time: "5 hours ago", actor: "admin" },
-    { id: 3, action: "License Assigned", target: "david.smith", time: "1 day ago", actor: "system" },
-    { id: 4, action: "Password Reset", target: "michael.brown", time: "1 day ago", actor: "helpdesk" }
-  ]
+  recentActivities: []
 };
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState(initialStats);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setStats(initialStats);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return (
     <div className="space-y-6">

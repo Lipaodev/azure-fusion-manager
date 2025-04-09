@@ -36,6 +36,15 @@ If you prefer to install manually:
 5. Initialize your chosen database manually with the schema (see Database Configuration)
 6. Start the development server: `npm run dev`
 
+## Default Admin Account
+
+During installation, a default admin account is automatically created with the following credentials:
+
+- Username: `admin`
+- Password: `admin`
+
+**Important**: For security reasons, change the default password immediately after your first login.
+
 ## Production Deployment
 
 For production environments, we recommend the following approach:

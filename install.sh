@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS m365_tenant_config (
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert default admin user
+-- ALWAYS create default admin user with super admin privileges
 INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, is_admin)
 VALUES ('admin', 'admin', 'admin@example.com', 'Admin', 'User', 1);
 
@@ -225,7 +225,7 @@ INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_ssl', 'false');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('from_email', 'noreply@example.com');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('session_timeout', '15');
 EOF
-        echo "✓ Database initialized"
+        echo "✓ Database initialized with admin user (username: admin, password: admin)"
     fi
 else
     echo "Please run the following SQL script to initialize your ${DB_TYPE} database:"
@@ -298,7 +298,7 @@ CREATE TABLE IF NOT EXISTS m365_tenant_config (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert default admin user
+-- ALWAYS create default admin user with super admin privileges
 INSERT INTO users (username, password, email, first_name, last_name, is_admin)
 VALUES ('admin', 'admin', 'admin@example.com', 'Admin', 'User', TRUE)
 ON CONFLICT (username) DO NOTHING;
@@ -315,6 +315,7 @@ VALUES
     ('session_timeout', '15')
 ON CONFLICT (key) DO NOTHING;
 EOF
+    echo "Make sure to run this script to create the admin user (username: admin, password: admin)."
 fi
 
 # Create a special start script that avoids ESM issues
