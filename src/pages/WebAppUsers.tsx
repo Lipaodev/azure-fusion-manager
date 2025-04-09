@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   UserCog, 
@@ -59,78 +58,22 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { WebAppUser } from '@/types';
 import { format } from 'date-fns';
 
-// Mock data for webapp users
-const mockWebAppUsers: WebAppUser[] = [
-  {
-    id: '1',
-    username: 'admin',
-    email: 'admin@example.com',
-    displayName: 'System Administrator',
-    role: 'Admin',
-    lastLogin: new Date(2023, 11, 28),
-    createdAt: new Date(2023, 1, 15),
-    isActive: true,
-    permissions: ['all'],
-  },
-  {
-    id: '2',
-    username: 'jsmith',
-    email: 'john.smith@example.com',
-    displayName: 'John Smith',
-    role: 'User',
-    lastLogin: new Date(2023, 11, 25),
-    createdAt: new Date(2023, 5, 10),
-    isActive: true,
-    permissions: ['read:users', 'read:groups', 'write:users'],
-  },
-  {
-    id: '3',
-    username: 'mjohnson',
-    email: 'maria.johnson@example.com',
-    displayName: 'Maria Johnson',
-    role: 'ReadOnly',
-    lastLogin: new Date(2023, 11, 20),
-    createdAt: new Date(2023, 6, 15),
-    isActive: true,
-    permissions: ['read:users', 'read:groups'],
-  },
-  {
-    id: '4',
-    username: 'helpdesk',
-    email: 'helpdesk@example.com',
-    displayName: 'Help Desk',
-    role: 'User',
-    lastLogin: new Date(2023, 11, 27),
-    createdAt: new Date(2023, 3, 5),
-    isActive: true,
-    permissions: ['read:users', 'write:users', 'reset:password'],
-  },
-  {
-    id: '5',
-    username: 'auditor',
-    email: 'auditor@example.com',
-    displayName: 'Security Auditor',
-    role: 'ReadOnly',
-    lastLogin: new Date(2023, 10, 15),
-    createdAt: new Date(2023, 7, 12),
-    isActive: false,
-    permissions: ['read:users', 'read:groups', 'read:audit'],
-  },
-];
+const initialWebAppUsers: WebAppUser[] = [];
 
 const WebAppUsers = () => {
   const { toast } = useToast();
-  const [users, setUsers] = useState<WebAppUser[]>(mockWebAppUsers);
+  const [users, setUsers] = useState<WebAppUser[]>(initialWebAppUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [userToDelete, setUserToDelete] = useState<WebAppUser | null>(null);
   const [userToEdit, setUserToEdit] = useState<WebAppUser | null>(null);
   const [userToResetPassword, setUserToResetPassword] = useState<WebAppUser | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
@@ -146,16 +89,29 @@ const WebAppUsers = () => {
   });
 
   const handleDeleteUser = () => {
-    if (!userToDelete) return;
+    if (!userToDelete || isDeleting) return;
 
-    const updatedUsers = users.filter(user => user.id !== userToDelete.id);
-    setUsers(updatedUsers);
-    setUserToDelete(null);
-    toast({
-      title: "User Deleted",
-      description: `${userToDelete.displayName} has been removed from the web application.`,
-      variant: "destructive",
-    });
+    try {
+      setIsDeleting(true);
+      
+      const updatedUsers = users.filter(user => user.id !== userToDelete.id);
+      setUsers(updatedUsers);
+      
+      toast({
+        title: "User Deleted",
+        description: `${userToDelete.displayName} has been removed from the web application.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Delete Failed",
+        description: "There was an error deleting the user.",
+        variant: "destructive",
+      });
+      console.error("Delete error:", error);
+    } finally {
+      setUserToDelete(null);
+      setIsDeleting(false);
+    }
   };
 
   const handleResetPassword = () => {
@@ -171,17 +127,48 @@ const WebAppUsers = () => {
   };
 
   const handleToggleUserStatus = (user: WebAppUser) => {
-    const updatedUsers = users.map(u => 
-      u.id === user.id 
-        ? { ...u, isActive: !u.isActive } 
-        : u
-    );
+    try {
+      const updatedUsers = users.map(u => 
+        u.id === user.id 
+          ? { ...u, isActive: !u.isActive } 
+          : u
+      );
+      
+      setUsers(updatedUsers);
+      
+      toast({
+        title: user.isActive ? "User Disabled" : "User Enabled",
+        description: `${user.displayName} has been ${user.isActive ? 'disabled' : 'enabled'}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Action Failed",
+        description: "Failed to update user status.",
+        variant: "destructive",
+      });
+      console.error("Toggle status error:", error);
+    }
+  };
+
+  const handleCreateUser = () => {
+    const newId = `new-${Date.now()}`;
+    const newUser: WebAppUser = {
+      id: newId,
+      username: `user${newId.substring(0, 5)}`,
+      email: `user${newId.substring(0, 5)}@example.com`,
+      displayName: "New Test User",
+      role: "User",
+      lastLogin: new Date(),
+      createdAt: new Date(),
+      isActive: true,
+      permissions: ['read:users'],
+    };
     
-    setUsers(updatedUsers);
+    setUsers(prev => [...prev, newUser]);
     
     toast({
-      title: user.isActive ? "User Disabled" : "User Enabled",
-      description: `${user.displayName} has been ${user.isActive ? 'disabled' : 'enabled'}.`,
+      title: "User Created",
+      description: "New test user has been created successfully.",
     });
   };
 
@@ -192,27 +179,10 @@ const WebAppUsers = () => {
           <UserCog className="h-6 w-6 text-primary" />
           <h1 className="text-3xl font-bold tracking-tight">Web App Users</h1>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Create User
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-xl">
-            <DialogHeader>
-              <DialogTitle>Create Web App User</DialogTitle>
-              <DialogDescription>
-                Add a new user to access the web application
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <p className="text-center text-muted-foreground py-8">
-                Web app user creation form would go here
-              </p>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleCreateUser}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Create User
+        </Button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 md:items-center">
@@ -252,27 +222,10 @@ const WebAppUsers = () => {
               : "You haven't added any web application users yet"}
           </p>
           {!searchQuery && filterRole === 'all' && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Create Your First User
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-xl">
-                <DialogHeader>
-                  <DialogTitle>Create Web App User</DialogTitle>
-                  <DialogDescription>
-                    Add a new user to access the web application
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="py-4">
-                  <p className="text-center text-muted-foreground py-8">
-                    Web app user creation form would go here
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={handleCreateUser}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Create Your First User
+            </Button>
           )}
         </div>
       ) : (
@@ -459,12 +412,13 @@ const WebAppUsers = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteUser}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
             >
-              Delete
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

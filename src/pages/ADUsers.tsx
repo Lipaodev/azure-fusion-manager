@@ -16,16 +16,16 @@ import { ADUser } from '@/types';
 import ADUserCard from '@/components/ad-users/ADUserCard';
 import ImportADUsersModal from '@/components/ad-users/ImportADUsersModal';
 
-// Mock data - in a real app, this would come from an API
-const mockADUsers: ADUser[] = [];
+// Start with empty arrays for AD users
+const initialADUsers: ADUser[] = [];
 
-// Mock domain controllers for import
+// Domain controllers for import
 const mockDomainControllers = [
   { id: '1', name: 'dc01.example.com' },
   { id: '2', name: 'dc02.example.com' }
 ];
 
-// Mock groups for import
+// Groups for import
 const mockGroups = [
   { id: '1', name: 'IT Department' },
   { id: '2', name: 'Sales' },
@@ -38,8 +38,9 @@ const ADUsers = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterGroup, setFilterGroup] = useState('all');
-  const [users, setUsers] = useState<ADUser[]>(mockADUsers);
+  const [users, setUsers] = useState<ADUser[]>(initialADUsers);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filter users based on search query and group filter
   const filteredUsers = users.filter(user => {
@@ -128,6 +129,18 @@ const ADUsers = () => {
         });
         return newUsers;
       });
+    } else if (data.importType === 'groups') {
+      // For groups import, would add logic here
+      toast({
+        title: "Groups Import",
+        description: "Groups import functionality would be implemented here",
+      });
+    } else if (data.importType === 'computers') {
+      // For computers import, would add logic here
+      toast({
+        title: "Computers Import",
+        description: "Computers import functionality would be implemented here",
+      });
     }
     
     toast({
@@ -145,14 +158,27 @@ const ADUsers = () => {
     });
   };
 
-  // Handler for deleting a user
+  // Handler for deleting a user with safety checks
   const handleDeleteUser = (user: ADUser) => {
-    setUsers(users.filter(u => u.id !== user.id));
-    toast({
-      title: "User Deleted",
-      description: `${user.displayName} has been removed`,
-      variant: "destructive",
-    });
+    try {
+      setIsDeleting(true);
+      const updatedUsers = users.filter(u => u.id !== user.id);
+      setUsers(updatedUsers);
+      
+      toast({
+        title: "User Deleted",
+        description: `${user.displayName} has been removed`,
+      });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Deletion Failed",
+        description: "An error occurred while deleting the user",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Handler for resetting a user's password
