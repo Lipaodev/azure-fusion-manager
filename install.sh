@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    key TEXT NOT NULL UNIQUE,
+    setting_key TEXT NOT NULL UNIQUE,
     value TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -304,14 +304,14 @@ INSERT OR IGNORE INTO users (username, password, email, first_name, last_name, i
 VALUES ('admin', 'admin', 'admin@example.com', 'Admin', 'User', 1);
 
 -- Insert default settings
-INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_server', '');
-INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_port', '25');
-INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_username', '');
-INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_password', '');
-INSERT OR IGNORE INTO settings (key, value) VALUES ('smtp_ssl', 'false');
-INSERT OR IGNORE INTO settings (key, value) VALUES ('from_email', 'noreply@example.com');
-INSERT OR IGNORE INTO settings (key, value) VALUES ('session_timeout', '15');
-INSERT OR IGNORE INTO settings (key, value) VALUES ('timezone', 'America/Sao_Paulo');
+INSERT OR IGNORE INTO settings (setting_key, value) VALUES ('smtp_server', '');
+INSERT OR IGNORE INTO settings (setting_key, value) VALUES ('smtp_port', '25');
+INSERT OR IGNORE INTO settings (setting_key, value) VALUES ('smtp_username', '');
+INSERT OR IGNORE INTO settings (setting_key, value) VALUES ('smtp_password', '');
+INSERT OR IGNORE INTO settings (setting_key, value) VALUES ('smtp_ssl', 'false');
+INSERT OR IGNORE INTO settings (setting_key, value) VALUES ('from_email', 'noreply@example.com');
+INSERT OR IGNORE INTO settings (setting_key, value) VALUES ('session_timeout', '15');
+INSERT OR IGNORE INTO settings (setting_key, value) VALUES ('timezone', 'America/Sao_Paulo');
 EOF
         echo "✓ Database initialized with admin user (username: admin, password: admin)"
     fi
@@ -334,7 +334,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    key VARCHAR(255) NOT NULL UNIQUE,
+    setting_key VARCHAR(255) NOT NULL UNIQUE,
     value TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -393,14 +393,14 @@ INSERT IGNORE INTO users (username, password, email, first_name, last_name, is_a
 VALUES ('admin', 'admin', 'admin@example.com', 'Admin', 'User', TRUE);
 
 -- Insert default settings
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_server', '');
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_port', '25');
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_username', '');
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_password', '');
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_ssl', 'false');
-INSERT IGNORE INTO settings (key, value) VALUES ('from_email', 'noreply@example.com');
-INSERT IGNORE INTO settings (key, value) VALUES ('session_timeout', '15');
-INSERT IGNORE INTO settings (key, value) VALUES ('timezone', 'America/Sao_Paulo');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_server', '');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_port', '25');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_username', '');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_password', '');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_ssl', 'false');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('from_email', 'noreply@example.com');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('session_timeout', '15');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('timezone', 'America/Sao_Paulo');
 EOF
         
         if [ $? -eq 0 ]; then
@@ -426,7 +426,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    key VARCHAR(255) NOT NULL UNIQUE,
+    setting_key VARCHAR(255) NOT NULL UNIQUE,
     value TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -485,14 +485,14 @@ INSERT IGNORE INTO users (username, password, email, first_name, last_name, is_a
 VALUES ('admin', 'admin', 'admin@example.com', 'Admin', 'User', TRUE);
 
 -- Insert default settings
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_server', '');
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_port', '25');
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_username', '');
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_password', '');
-INSERT IGNORE INTO settings (key, value) VALUES ('smtp_ssl', 'false');
-INSERT IGNORE INTO settings (key, value) VALUES ('from_email', 'noreply@example.com');
-INSERT IGNORE INTO settings (key, value) VALUES ('session_timeout', '15');
-INSERT IGNORE INTO settings (key, value) VALUES ('timezone', 'America/Sao_Paulo');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_server', '');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_port', '25');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_username', '');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_password', '');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('smtp_ssl', 'false');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('from_email', 'noreply@example.com');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('session_timeout', '15');
+INSERT IGNORE INTO settings (setting_key, value) VALUES ('timezone', 'America/Sao_Paulo');
 EOF
     fi
 else
@@ -513,7 +513,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS settings (
     id SERIAL PRIMARY KEY,
-    key VARCHAR(255) NOT NULL UNIQUE,
+    setting_key VARCHAR(255) NOT NULL UNIQUE,
     value TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -573,7 +573,7 @@ VALUES ('admin', 'admin', 'admin@example.com', 'Admin', 'User', TRUE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Insert default settings
-INSERT INTO settings (key, value)
+INSERT INTO settings (setting_key, value)
 VALUES 
     ('smtp_server', ''),
     ('smtp_port', '25'),
@@ -583,7 +583,7 @@ VALUES
     ('from_email', 'noreply@example.com'),
     ('session_timeout', '15'),
     ('timezone', 'America/Sao_Paulo')
-ON CONFLICT (key) DO NOTHING;
+ON CONFLICT (setting_key) DO NOTHING;
 EOF
 fi
 
@@ -619,3 +619,4 @@ echo ""
 echo "IMPORTANT: This is a development setup. For production use,"
 echo "please configure proper authentication and secure the database."
 echo "====================================================="
+

@@ -10,9 +10,10 @@ This document provides comprehensive instructions for installing and deploying t
 - 2GB RAM minimum (4GB recommended)
 - 1GB free disk space
 - One of the following databases:
-  - SQLite3 (default, included)
-  - MySQL 5.7+ or MariaDB 10.2+
+  - MariaDB 10.2+ (recommended)
+  - MySQL 5.7+
   - PostgreSQL 10+
+  - SQLite3 (not recommended for production)
 
 ## Installation Options
 
@@ -69,21 +70,24 @@ For a more robust production deployment:
 
 The application supports multiple database options:
 
-### SQLite (Default)
+### MariaDB (Recommended)
 
-- Suitable for small deployments and testing
-- No additional installation required
-- Data stored in `database/azure-ad-manager.db`
+- Suitable for production deployments
+- Requires MariaDB server installed
 - Configuration in `.env.local`:
   ```
-  DB_TYPE=sqlite
-  DB_PATH=../database/azure-ad-manager.db
+  DB_TYPE=mariadb
+  DB_HOST=localhost
+  DB_PORT=3306
+  DB_NAME=azureadmanager
+  DB_USER=yourusername
+  DB_PASSWORD=yourpassword
   ```
 
-### MySQL / MariaDB
+### MySQL
 
 - Suitable for medium-sized deployments
-- Requires MySQL/MariaDB server installed
+- Requires MySQL server installed
 - Configuration in `.env.local`:
   ```
   DB_TYPE=mysql
@@ -108,6 +112,17 @@ The application supports multiple database options:
   DB_PASSWORD=yourpassword
   ```
 
+### SQLite (Not recommended for production)
+
+- Suitable for testing and small deployments
+- No additional installation required
+- Data stored in `database/azure-ad-manager.db`
+- Configuration in `.env.local`:
+  ```
+  DB_TYPE=sqlite
+  DB_PATH=../database/azure-ad-manager.db
+  ```
+
 During installation, the script will create the necessary tables in your database and validate connectivity. If you're setting up the database manually, use the SQL initialization scripts provided in the installation guide.
 
 ## Database Schema
@@ -125,16 +140,7 @@ The application creates the following tables in your database:
 - `ad_users` - Active Directory users
 - `ad_groups` - Active Directory groups
 
-## Database Connection Validation
-
-The installation script includes a database connection validator that:
-
-1. Tests connectivity to your configured database
-2. Verifies credentials and permissions
-3. Validates schema creation privileges
-4. Reports specific error messages for troubleshooting
-
-This ensures that your application can properly connect to and utilize the database before completing installation.
+**Note**: The settings table uses `setting_key` instead of `key` to avoid conflicts with reserved SQL keywords.
 
 ## Active Directory Configuration
 
@@ -171,26 +177,6 @@ M365_CLIENT_SECRET=your-client-secret
 M365_REDIRECT_URI=http://localhost:8080/auth/microsoft/callback
 ```
 
-## Client Organization Management
-
-The application supports managing multiple client organizations:
-
-1. Add clients through the web interface after logging in as an administrator
-2. Each client can have its own:
-   - Active Directory servers
-   - Microsoft 365 tenant configuration 
-   - User management and permissions
-3. Filter and manage resources by client organization
-
-## Importing Active Directory and Microsoft 365 Users
-
-The application supports importing users from:
-
-1. **Active Directory** - Connect to your on-premises AD server and import users
-2. **Microsoft 365** - Import users from your Microsoft 365 tenant after configuring the integration
-
-Both import options are available through the web interface once the respective connections are configured.
-
 ## Troubleshooting
 
 If you encounter issues during installation or deployment:
@@ -207,8 +193,8 @@ If you encounter issues during installation or deployment:
 
 3. **Database Errors**: Check that your database is properly installed and accessible
    ```
-   # For SQLite
-   sqlite3 --version
+   # For MariaDB
+   mariadb --version
    
    # For MySQL
    mysql --version
@@ -217,21 +203,17 @@ If you encounter issues during installation or deployment:
    psql --version
    ```
 
-4. **Database Connection**: Verify connection details in your .env.local file
+4. **SQL Syntax Errors**: If you encounter SQL errors about keywords, check that your database schema is using `setting_key` instead of `key` in the settings table.
+
+5. **Database Connection**: Verify connection details in your .env.local file
    ```
-   # Check database connectivity
-   ./install.sh --test-db-connection
+   # Check database connectivity manually
+   mysql -h hostname -u username -p -e "use databasename; SELECT 1;"
    ```
 
-5. **Network Issues**: Verify connectivity to your Active Directory servers
+6. **Network Issues**: Verify connectivity to your Active Directory servers
    ```
    ping your-ad-server
-   ```
-
-6. **Microsoft 365 Connection**: Verify your tenant configuration
-   ```
-   # Check that the redirect URI matches what's configured in Azure Portal
-   # Verify that API permissions have been granted admin consent
    ```
 
 7. **Application Logs**: Check the console output and log files for any error messages
@@ -247,3 +229,4 @@ For additional support, please contact your system administrator.
 - Use a secure database password and restrict database access
 - Consider using environment variables instead of .env files in production
 - Store Microsoft 365 client secrets securely and rotate them regularly
+

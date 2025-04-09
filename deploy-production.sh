@@ -83,3 +83,4 @@ echo "- Setting up Nginx as a reverse proxy"
 echo "- Configuring SSL certificates"
 echo "- Setting proper environment variables"
 echo "====================================================="
+
