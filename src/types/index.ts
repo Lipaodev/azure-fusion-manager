@@ -46,6 +46,8 @@ export interface ADUser {
   clientId?: string;
   clientName?: string;
   serverId?: string;
+  profilePictureUrl?: string; // Added this property
+  accountExpires?: Date; // Added this property
 }
 
 export interface ADGroup {
@@ -80,4 +82,36 @@ export interface M365User {
   jobTitle?: string;
   lastSignIn?: Date;
   accountEnabled: boolean;
+}
+
+// Added missing interfaces
+export interface License {
+  id: string;
+  name: string;
+  description: string;
+  assignedUsers: number;
+  totalLicenses: number;
+  skuId?: string;
+}
+
+export type ReportType = 'LicenseUsage' | 'ActiveAccounts' | 'UserActivities' | 'GroupMembership';
+
+export interface ReportConfiguration {
+  id: string;
+  name: string;
+  type: ReportType;
+  schedule?: 'daily' | 'weekly' | 'monthly';
+  lastRun?: Date;
+  recipients: string[];
+  parameters: Record<string, any>;
+}
+
+export interface EmailSettings {
+  smtpServer: string;
+  port: number;
+  useSsl: boolean;
+  username: string;
+  password: string;
+  defaultSender: string;
+  enabled: boolean;
 }
