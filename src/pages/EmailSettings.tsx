@@ -94,7 +94,19 @@ const EmailSettings = () => {
     console.log("Saving email settings:", data);
     
     // Here you would save the settings to the database
-    setSettings(data);
+    // Make sure all required fields are set properly to match EmailSettingsType
+    const updatedSettings: EmailSettingsType = {
+      smtpServer: data.smtpServer,
+      port: data.port,
+      useSsl: data.useSsl,
+      username: data.username,
+      password: data.password,
+      fromAddress: data.fromAddress,
+      defaultSender: data.defaultSender,
+      enabled: data.enabled,
+    };
+    
+    setSettings(updatedSettings);
     
     toast({
       title: "Settings Saved",
