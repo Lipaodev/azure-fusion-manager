@@ -1,4 +1,3 @@
-
 // Add to existing types file
 export interface WebAppUser {
   id: string;
@@ -113,5 +112,6 @@ export interface EmailSettings {
   username: string;
   password: string;
   defaultSender: string;
+  fromAddress: string; // Added this property
   enabled: boolean;
 }

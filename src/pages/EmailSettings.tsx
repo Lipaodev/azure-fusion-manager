@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Mail, 
@@ -45,14 +44,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { EmailSettings as EmailSettingsType } from '@/types';
 
-// Mock data for email settings
-const mockEmailSettings: EmailSettingsType = {
+// Mock data for email settings - update this to match the interface
+const mockEmailSettings: EmailSettings = {
   smtpServer: 'smtp.example.com',
   port: 587,
   useSsl: true,
   username: 'notifications@example.com',
   password: '**********',
   fromAddress: 'notifications@example.com',
+  defaultSender: 'notifications@example.com',
   enabled: true,
 };
 
