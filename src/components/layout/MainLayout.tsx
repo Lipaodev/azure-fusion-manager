@@ -1,18 +1,28 @@
 
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { Navbar } from './Navbar';
 import { MoonIcon, SunIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MainLayout = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(
     window.matchMedia('(prefers-color-scheme: dark)').matches
   );
+
+  // Redirect to login if not authenticated
+  React.useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -39,8 +49,10 @@ const MainLayout = () => {
         setSidebarOpen={setSidebarOpen} 
       />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar open={sidebarOpen} />
-        <main className="flex-1 overflow-auto p-4">
+        <div className={`fixed z-40 h-full ${sidebarOpen ? 'w-64' : 'w-16'}`}>
+          <Sidebar open={sidebarOpen} />
+        </div>
+        <main className={`flex-1 overflow-auto p-4 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
           <Outlet />
         </main>
       </div>

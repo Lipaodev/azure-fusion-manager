@@ -1,4 +1,17 @@
 
+// Add to existing types file
+export interface WebAppUser {
+  id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  role: "Admin" | "User" | "ReadOnly";
+  lastLogin: Date | null;
+  createdAt: Date;
+  isActive: boolean;
+  permissions: string[];
+}
+
 export interface ADServer {
   id: string;
   name: string;
@@ -7,9 +20,11 @@ export interface ADServer {
   port: number;
   useSSL: boolean;
   username: string;
-  password: string; // Em uma aplicação real, isso não deve ser armazenado como texto simples
+  password: string;
   isConnected: boolean;
-  lastConnectionTime?: Date;
+  lastConnectionTime: Date;
+  clientId?: string;
+  clientName?: string;
 }
 
 export interface ADUser {
@@ -24,80 +39,45 @@ export interface ADUser {
   phoneNumber?: string;
   isEnabled: boolean;
   groups: string[];
+  licenses?: string[];
   createdAt: Date;
   lastModified: Date;
-  accountExpires?: Date;
   lastLogon?: Date;
-  profilePictureUrl?: string;
+  clientId?: string;
+  clientName?: string;
+  serverId?: string;
 }
 
 export interface ADGroup {
   id: string;
   name: string;
   description?: string;
-  email?: string;
   members: number;
-  category: 'Security' | 'Distribution';
-  scope: 'DomainLocal' | 'Global' | 'Universal';
+  category: string;
+  scope: string;
   createdAt: Date;
   lastModified: Date;
 }
 
-export interface WebAppUser {
+export interface M365License {
   id: string;
-  username: string;
-  email: string;
+  name: string;
+  description?: string;
+  included?: string[];
+  assignedUsers?: number;
+  totalAvailable?: number;
+}
+
+export interface M365User {
+  id: string;
   displayName: string;
-  role: 'Admin' | 'User' | 'ReadOnly';
-  lastLogin?: Date;
-  createdAt: Date;
-  isActive: boolean;
-  permissions: string[];
-}
-
-export interface AzureAppConfig {
-  tenantId: string;
-  clientId: string;
-  clientSecret: string; // Em uma aplicação real, isso não deve ser armazenado como texto simples
-  enabled: boolean;
-}
-
-export interface EmailSettings {
-  smtpServer: string;
-  port: number;
-  useSsl: boolean;
+  email: string;
   username: string;
-  password: string; // Em uma aplicação real, isso não deve ser armazenado como texto simples
-  fromAddress: string;
-  enabled: boolean;
-}
-
-export interface License {
-  id: string;
-  name: string;
-  description: string;
-  assignedUsers: number;
-  totalLicenses: number;
-  skuId: string;
-}
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  read: boolean;
-  createdAt: Date;
-}
-
-export type ReportType = 'LicenseUsage' | 'ActiveAccounts' | 'UserActivities' | 'GroupMembership';
-
-export interface ReportConfiguration {
-  id: string;
-  name: string;
-  type: ReportType;
-  schedule?: 'daily' | 'weekly' | 'monthly';
-  lastRun?: Date;
-  recipients: string[];
-  parameters: Record<string, any>;
+  isLicensed: boolean;
+  licenses: string[];
+  isAdmin: boolean;
+  departmentName?: string;
+  jobTitle?: string;
+  lastSignIn?: Date;
+  accountEnabled: boolean;
 }

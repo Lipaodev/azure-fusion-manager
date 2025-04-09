@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Search, UserPlus, Filter, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,33 +16,42 @@ import { ADUser } from '@/types';
 import ADUserCard from '@/components/ad-users/ADUserCard';
 import ImportADUsersModal from '@/components/ad-users/ImportADUsersModal';
 
-// Start with empty arrays for AD users
-const initialADUsers: ADUser[] = [];
-
-// Domain controllers for import
-const mockDomainControllers = [
-  { id: '1', name: 'dc01.example.com' },
-  { id: '2', name: 'dc02.example.com' }
-];
-
-// Groups for import
-const mockGroups = [
-  { id: '1', name: 'IT Department' },
-  { id: '2', name: 'Sales' },
-  { id: '3', name: 'HR' },
-  { id: '4', name: 'Finance' }
-];
-
 const ADUsers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterGroup, setFilterGroup] = useState('all');
-  const [users, setUsers] = useState<ADUser[]>(initialADUsers);
+  const [filterClient, setFilterClient] = useState('all');
+  const [users, setUsers] = useState<ADUser[]>([]);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [clients, setClients] = useState<{id: string, name: string}[]>([]);
 
-  // Filter users based on search query and group filter
+  // Load clients (would be from database in production)
+  useEffect(() => {
+    // This would be an API call in a real application
+    setClients([
+      { id: 'client1', name: 'Client 1' },
+      { id: 'client2', name: 'Client 2' },
+      { id: 'client3', name: 'Client 3' },
+    ]);
+  }, []);
+
+  // Domain controllers for import
+  const mockDomainControllers = [
+    { id: '1', name: 'dc01.example.com' },
+    { id: '2', name: 'dc02.example.com' }
+  ];
+
+  // Groups for import
+  const mockGroups = [
+    { id: '1', name: 'IT Department' },
+    { id: '2', name: 'Sales' },
+    { id: '3', name: 'HR' },
+    { id: '4', name: 'Finance' }
+  ];
+
+  // Filter users based on search query, group filter, and client filter
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -53,18 +62,25 @@ const ADUsers = () => {
       filterGroup === 'all' ||
       user.groups.includes(filterGroup);
       
-    return matchesSearch && matchesGroup;
+    const matchesClient = 
+      filterClient === 'all' ||
+      user.clientId === filterClient;
+      
+    return matchesSearch && matchesGroup && matchesClient;
   });
 
   const handleImportUsers = (data: any) => {
     console.log('Import data:', data);
     
-    // Create different sample items based on the importType
+    // Create different sample items based on the importType and client
     if (data.importType === 'users' || data.importType === 'all') {
       // For demo purposes, we'll create some sample users
+      const clientId = data.clientId || 'client1';
+      const clientName = clients.find(c => c.id === clientId)?.name || 'Client 1';
+      
       const importedUsers: ADUser[] = [
         {
-          id: '1',
+          id: `${clientId}-user1`,
           username: 'jdoe',
           displayName: 'John Doe',
           email: 'john.doe@example.com',
@@ -75,12 +91,15 @@ const ADUsers = () => {
           phoneNumber: '555-1234',
           isEnabled: true,
           groups: ['IT Department'],
+          clientId: clientId,
+          clientName: clientName,
+          serverId: data.serverId || '1',
           createdAt: new Date(),
           lastModified: new Date(),
           lastLogon: new Date(Date.now() - 24 * 60 * 60 * 1000) // yesterday
         },
         {
-          id: '2',
+          id: `${clientId}-user2`,
           username: 'asmith',
           displayName: 'Alice Smith',
           email: 'alice.smith@example.com',
@@ -91,12 +110,15 @@ const ADUsers = () => {
           phoneNumber: '555-5678',
           isEnabled: true,
           groups: ['HR'],
+          clientId: clientId,
+          clientName: clientName,
+          serverId: data.serverId || '1',
           createdAt: new Date(),
           lastModified: new Date(),
           lastLogon: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
         },
         {
-          id: '3',
+          id: `${clientId}-user3`,
           username: 'rjohnson',
           displayName: 'Robert Johnson',
           email: 'robert.johnson@example.com',
@@ -107,6 +129,9 @@ const ADUsers = () => {
           phoneNumber: '555-9012',
           isEnabled: true,
           groups: ['Sales'],
+          clientId: clientId,
+          clientName: clientName,
+          serverId: data.serverId || '1',
           createdAt: new Date(),
           lastModified: new Date(),
           lastLogon: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
@@ -118,7 +143,10 @@ const ADUsers = () => {
         const newUsers = [...prevUsers];
         importedUsers.forEach(user => {
           // Check if user already exists (by id or username)
-          const existingIndex = newUsers.findIndex(u => u.id === user.id || u.username === user.username);
+          const existingIndex = newUsers.findIndex(u => 
+            u.id === user.id || 
+            (u.username === user.username && u.clientId === user.clientId)
+          );
           if (existingIndex >= 0) {
             // Update existing user
             newUsers[existingIndex] = { ...user };
@@ -128,6 +156,11 @@ const ADUsers = () => {
           }
         });
         return newUsers;
+      });
+      
+      toast({
+        title: "Import Successful",
+        description: `Successfully imported users from Active Directory for ${clientName}`,
       });
     } else if (data.importType === 'groups') {
       // For groups import, would add logic here
@@ -142,11 +175,6 @@ const ADUsers = () => {
         description: "Computers import functionality would be implemented here",
       });
     }
-    
-    toast({
-      title: "Import Successful",
-      description: `Successfully imported ${data.importType} from Active Directory`,
-    });
   };
 
   // Handler for editing a user
@@ -224,6 +252,23 @@ const ADUsers = () => {
         
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-muted-foreground" />
+          <Select value={filterClient} onValueChange={setFilterClient}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by client" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Clients</SelectItem>
+              {clients.map(client => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Filter className="h-5 w-5 text-muted-foreground" />
           <Select value={filterGroup} onValueChange={setFilterGroup}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by group" />
@@ -244,11 +289,11 @@ const ADUsers = () => {
           <Users className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium">No users found</h3>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
-            {searchQuery || filterGroup !== 'all'
+            {searchQuery || filterGroup !== 'all' || filterClient !== 'all'
               ? "No users match your search criteria" 
               : "You haven't added any Active Directory users yet"}
           </p>
-          {!searchQuery && filterGroup === 'all' && (
+          {!searchQuery && filterGroup === 'all' && filterClient === 'all' && (
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
               <Button 
                 variant="outline" 
@@ -284,6 +329,7 @@ const ADUsers = () => {
         onImport={handleImportUsers}
         domainControllers={mockDomainControllers}
         groups={mockGroups}
+        clients={clients}
       />
     </div>
   );

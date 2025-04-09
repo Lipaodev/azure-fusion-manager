@@ -23,7 +23,12 @@ This document provides comprehensive instructions for installing and deploying t
 3. Make the install script executable: `chmod +x install.sh`
 4. Run the script: `./install.sh`
 5. Follow the on-screen instructions to choose your database and enter configuration
-6. Start the application with: `node start.js`
+6. The installation script will:
+   - Verify database connectivity
+   - Create required database tables
+   - Create a default admin account
+   - Configure your application settings
+7. Start the application with: `node start.js`
 
 ### Option 2: Manual Installation
 
@@ -103,7 +108,7 @@ The application supports multiple database options:
   DB_PASSWORD=yourpassword
   ```
 
-During installation, the script will create the necessary tables in your database. If you're setting up the database manually, use the SQL initialization scripts provided in the installation guide.
+During installation, the script will create the necessary tables in your database and validate connectivity. If you're setting up the database manually, use the SQL initialization scripts provided in the installation guide.
 
 ## Database Schema
 
@@ -111,10 +116,25 @@ The application creates the following tables in your database:
 
 - `users` - Web application users
 - `settings` - Application settings
+- `clients` - Client organizations
 - `m365_users` - Microsoft 365 users
 - `m365_licenses` - Microsoft 365 licenses
 - `m365_user_licenses` - Many-to-many relationship between users and licenses
 - `m365_tenant_config` - Microsoft 365 tenant configuration
+- `ad_servers` - Active Directory server connections
+- `ad_users` - Active Directory users
+- `ad_groups` - Active Directory groups
+
+## Database Connection Validation
+
+The installation script includes a database connection validator that:
+
+1. Tests connectivity to your configured database
+2. Verifies credentials and permissions
+3. Validates schema creation privileges
+4. Reports specific error messages for troubleshooting
+
+This ensures that your application can properly connect to and utilize the database before completing installation.
 
 ## Active Directory Configuration
 
@@ -151,6 +171,17 @@ M365_CLIENT_SECRET=your-client-secret
 M365_REDIRECT_URI=http://localhost:8080/auth/microsoft/callback
 ```
 
+## Client Organization Management
+
+The application supports managing multiple client organizations:
+
+1. Add clients through the web interface after logging in as an administrator
+2. Each client can have its own:
+   - Active Directory servers
+   - Microsoft 365 tenant configuration 
+   - User management and permissions
+3. Filter and manage resources by client organization
+
 ## Importing Active Directory and Microsoft 365 Users
 
 The application supports importing users from:
@@ -186,18 +217,24 @@ If you encounter issues during installation or deployment:
    psql --version
    ```
 
-4. **Network Issues**: Verify connectivity to your Active Directory servers
+4. **Database Connection**: Verify connection details in your .env.local file
+   ```
+   # Check database connectivity
+   ./install.sh --test-db-connection
+   ```
+
+5. **Network Issues**: Verify connectivity to your Active Directory servers
    ```
    ping your-ad-server
    ```
 
-5. **Microsoft 365 Connection**: Verify your tenant configuration
+6. **Microsoft 365 Connection**: Verify your tenant configuration
    ```
    # Check that the redirect URI matches what's configured in Azure Portal
    # Verify that API permissions have been granted admin consent
    ```
 
-6. **Application Logs**: Check the console output for any error messages
+7. **Application Logs**: Check the console output and log files for any error messages
 
 For additional support, please contact your system administrator.
 

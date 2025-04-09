@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   UserCog, 
@@ -12,10 +13,12 @@ import {
   LockKeyhole,
   Trash2,
   MoreVertical,
-  AlertCircle
+  AlertCircle,
+  Save
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -62,11 +65,9 @@ import { useToast } from '@/hooks/use-toast';
 import { WebAppUser } from '@/types';
 import { format } from 'date-fns';
 
-const initialWebAppUsers: WebAppUser[] = [];
-
 const WebAppUsers = () => {
   const { toast } = useToast();
-  const [users, setUsers] = useState<WebAppUser[]>(initialWebAppUsers);
+  const [users, setUsers] = useState<WebAppUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [userToDelete, setUserToDelete] = useState<WebAppUser | null>(null);
@@ -74,6 +75,17 @@ const WebAppUsers = () => {
   const [userToResetPassword, setUserToResetPassword] = useState<WebAppUser | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  
+  // Form state for creating/editing users
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    displayName: '',
+    role: 'User',
+    password: '',
+    confirmPassword: '',
+  });
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
@@ -150,25 +162,126 @@ const WebAppUsers = () => {
     }
   };
 
+  const openCreateUserForm = () => {
+    setFormData({
+      username: '',
+      email: '',
+      displayName: '',
+      role: 'User',
+      password: '',
+      confirmPassword: '',
+    });
+    setIsCreatingUser(true);
+  };
+
+  const openEditUserForm = (user: WebAppUser) => {
+    setFormData({
+      username: user.username,
+      email: user.email,
+      displayName: user.displayName,
+      role: user.role,
+      password: '',
+      confirmPassword: '',
+    });
+    setUserToEdit(user);
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const validateForm = () => {
+    const errors: string[] = [];
+    
+    if (!formData.username) errors.push('Username is required');
+    if (!formData.email) errors.push('Email is required');
+    if (!formData.displayName) errors.push('Display name is required');
+    
+    if (isCreatingUser) {
+      if (!formData.password) errors.push('Password is required');
+      if (formData.password.length < 8) errors.push('Password must be at least 8 characters');
+      if (formData.password !== formData.confirmPassword) errors.push('Passwords do not match');
+    }
+    
+    return errors;
+  };
+
   const handleCreateUser = () => {
-    const newId = `new-${Date.now()}`;
+    const errors = validateForm();
+    
+    if (errors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: errors.join('. '),
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const newUser: WebAppUser = {
-      id: newId,
-      username: `user${newId.substring(0, 5)}`,
-      email: `user${newId.substring(0, 5)}@example.com`,
-      displayName: "New Test User",
-      role: "User",
-      lastLogin: new Date(),
+      id: `user-${Date.now()}`,
+      username: formData.username,
+      email: formData.email,
+      displayName: formData.displayName,
+      role: formData.role as "Admin" | "User" | "ReadOnly",
+      lastLogin: null,
       createdAt: new Date(),
       isActive: true,
       permissions: ['read:users'],
     };
     
     setUsers(prev => [...prev, newUser]);
+    setIsCreatingUser(false);
     
     toast({
       title: "User Created",
-      description: "New test user has been created successfully.",
+      description: `${newUser.displayName} has been created successfully.`,
+    });
+  };
+
+  const handleUpdateUser = () => {
+    if (!userToEdit) return;
+    
+    const errors = validateForm();
+    
+    if (errors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: errors.join('. '),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const updatedUsers = users.map(user => 
+      user.id === userToEdit.id 
+        ? { 
+            ...user, 
+            username: formData.username,
+            email: formData.email,
+            displayName: formData.displayName,
+            role: formData.role as "Admin" | "User" | "ReadOnly",
+          } 
+        : user
+    );
+    
+    setUsers(updatedUsers);
+    setUserToEdit(null);
+    
+    toast({
+      title: "User Updated",
+      description: `${formData.displayName} has been updated successfully.`,
     });
   };
 
@@ -179,7 +292,7 @@ const WebAppUsers = () => {
           <UserCog className="h-6 w-6 text-primary" />
           <h1 className="text-3xl font-bold tracking-tight">Web App Users</h1>
         </div>
-        <Button onClick={handleCreateUser}>
+        <Button onClick={openCreateUserForm}>
           <UserPlus className="mr-2 h-4 w-4" />
           Create User
         </Button>
@@ -222,7 +335,7 @@ const WebAppUsers = () => {
               : "You haven't added any web application users yet"}
           </p>
           {!searchQuery && filterRole === 'all' && (
-            <Button onClick={handleCreateUser}>
+            <Button onClick={openCreateUserForm}>
               <UserPlus className="mr-2 h-4 w-4" />
               Create Your First User
             </Button>
@@ -314,7 +427,7 @@ const WebAppUsers = () => {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>User Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setUserToEdit(user)}>
+                      <DropdownMenuItem onClick={() => openEditUserForm(user)}>
                         <User className="mr-2 h-4 w-4" />
                         Edit User
                       </DropdownMenuItem>
@@ -339,19 +452,153 @@ const WebAppUsers = () => {
         </div>
       )}
 
+      {/* Create User Dialog */}
+      <Dialog open={isCreatingUser} onOpenChange={setIsCreatingUser}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Web App User</DialogTitle>
+            <DialogDescription>
+              Add a new user to access the web application
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Display Name</Label>
+              <Input
+                id="displayName"
+                name="displayName"
+                value={formData.displayName}
+                onChange={handleFormChange}
+                placeholder="John Doe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleFormChange}
+                placeholder="johndoe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleFormChange}
+                placeholder="john.doe@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={formData.role} onValueChange={(value) => handleSelectChange('role', value)}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">Administrator</SelectItem>
+                  <SelectItem value="User">Standard User</SelectItem>
+                  <SelectItem value="ReadOnly">Read-Only User</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setIsCreatingUser(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateUser}>
+                <Save className="mr-2 h-4 w-4" />
+                Create User
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit User Dialog */}
       <Dialog open={!!userToEdit} onOpenChange={(open) => !open && setUserToEdit(null)}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Web App User</DialogTitle>
             <DialogDescription>
-              Update user information and permissions
+              Update user information
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-center text-muted-foreground py-8">
-              Web app user edit form would go here
-            </p>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-displayName">Display Name</Label>
+              <Input
+                id="edit-displayName"
+                name="displayName"
+                value={formData.displayName}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-username">Username</Label>
+              <Input
+                id="edit-username"
+                name="username"
+                value={formData.username}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Role</Label>
+              <Select value={formData.role} onValueChange={(value) => handleSelectChange('role', value)}>
+                <SelectTrigger id="edit-role">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">Administrator</SelectItem>
+                  <SelectItem value="User">Standard User</SelectItem>
+                  <SelectItem value="ReadOnly">Read-Only User</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setUserToEdit(null)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateUser}>
+                <Save className="mr-2 h-4 w-4" />
+                Update User
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -370,9 +617,9 @@ const WebAppUsers = () => {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label htmlFor="new-password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <Label htmlFor="new-password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 New Password
-              </label>
+              </Label>
               <Input
                 id="new-password"
                 type="password"
