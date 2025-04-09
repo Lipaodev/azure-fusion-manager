@@ -1,30 +1,34 @@
+
 import React, { useState } from 'react';
 import { 
   Mail, 
   Server, 
-  Save, 
-  Bell, 
-  Send, 
-  Check, 
-  Clock,
-  CheckCircle2, 
-  XCircle 
+  Lock, 
+  User, 
+  Save,
+  ToggleLeft,
+  ToggleRight,
+  AlertCircle
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
 } from '@/components/ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -34,527 +38,316 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useToast } from '@/components/ui/use-toast';
 import * as z from 'zod';
 import { EmailSettings as EmailSettingsType } from '@/types';
 
-// Mock data for email settings - update this to match the interface
-const mockEmailSettings: EmailSettings = {
-  smtpServer: 'smtp.example.com',
-  port: 587,
-  useSsl: true,
-  username: 'notifications@example.com',
-  password: '**********',
-  fromAddress: 'notifications@example.com',
-  defaultSender: 'notifications@example.com',
-  enabled: true,
+// Empty initial email settings
+const emptyEmailSettings: EmailSettingsType = {
+  smtpServer: '',
+  port: 25,
+  useSsl: false,
+  username: '',
+  password: '',
+  defaultSender: '',
+  fromAddress: '',
+  enabled: false,
 };
-
-// Email notification types
-const notificationTypes = [
-  {
-    id: 'user-created',
-    name: 'User Created',
-    description: 'Send notification when a new user is created',
-    enabled: true,
-  },
-  {
-    id: 'user-modified',
-    name: 'User Modified',
-    description: 'Send notification when a user is modified',
-    enabled: false,
-  },
-  {
-    id: 'user-deleted',
-    name: 'User Deleted',
-    description: 'Send notification when a user is deleted',
-    enabled: true,
-  },
-  {
-    id: 'group-modified',
-    name: 'Group Modified',
-    description: 'Send notification when a group is modified',
-    enabled: false,
-  },
-  {
-    id: 'password-reset',
-    name: 'Password Reset',
-    description: 'Send notification when a password is reset',
-    enabled: true,
-  },
-  {
-    id: 'license-assigned',
-    name: 'License Assigned',
-    description: 'Send notification when a license is assigned',
-    enabled: false,
-  },
-  {
-    id: 'license-unassigned',
-    name: 'License Unassigned',
-    description: 'Send notification when a license is unassigned',
-    enabled: false,
-  },
-  {
-    id: 'report-generated',
-    name: 'Report Generated',
-    description: 'Send notification when a report is generated',
-    enabled: true,
-  },
-];
-
-// Notification recipients
-const notificationRecipients = [
-  {
-    id: 'r1',
-    email: 'admin@example.com',
-    name: 'System Administrator',
-    allNotifications: true,
-  },
-  {
-    id: 'r2',
-    email: 'it@example.com',
-    name: 'IT Department',
-    allNotifications: false,
-  },
-  {
-    id: 'r3',
-    email: 'security@example.com',
-    name: 'Security Team',
-    allNotifications: false,
-  },
-];
 
 const formSchema = z.object({
   smtpServer: z.string().min(1, { message: "SMTP server is required" }),
-  port: z.coerce.number().int().positive({ message: "Port must be a positive number" }),
-  useSsl: z.boolean().default(true),
+  port: z.coerce.number().min(1).max(65535),
+  useSsl: z.boolean().default(false),
   username: z.string().min(1, { message: "Username is required" }),
   password: z.string().min(1, { message: "Password is required" }),
   fromAddress: z.string().email({ message: "Valid email address is required" }),
-  enabled: z.boolean().default(true),
+  defaultSender: z.string().min(1, { message: "Default sender name is required" }),
+  enabled: z.boolean().default(false),
 });
 
 const EmailSettings = () => {
   const { toast } = useToast();
-  const [emailSettings, setEmailSettings] = useState<EmailSettingsType>(mockEmailSettings);
-  const [notifications, setNotifications] = useState(notificationTypes);
-  const [recipients, setRecipients] = useState(notificationRecipients);
-  const [testEmailStatus, setTestEmailStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
-  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [settings, setSettings] = useState<EmailSettingsType>(emptyEmailSettings);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [showTestDialog, setShowTestDialog] = useState(false);
+  const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: emailSettings,
+    defaultValues: settings,
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    // Ensure all required properties are included when updating state
-    const updatedSettings: EmailSettingsType = {
-      smtpServer: data.smtpServer,
-      port: data.port,
-      useSsl: data.useSsl,
-      username: data.username,
-      password: data.password,
-      fromAddress: data.fromAddress,
-      enabled: data.enabled
-    };
+    console.log("Saving email settings:", data);
     
-    setEmailSettings(updatedSettings);
+    // Here you would save the settings to the database
+    setSettings(data);
     
     toast({
       title: "Settings Saved",
-      description: "Email notification settings have been updated.",
+      description: "Email settings have been updated successfully.",
     });
   };
 
-  const handleToggleNotification = (id: string) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id 
-        ? { ...notification, enabled: !notification.enabled } 
-        : notification
-    ));
-  };
-
-  const handleRemoveRecipient = (id: string) => {
-    setRecipients(recipients.filter(recipient => recipient.id !== id));
-    toast({
-      title: "Recipient Removed",
-      description: "The notification recipient has been removed.",
-    });
-  };
-
-  const handleSendTestEmail = () => {
-    if (!testEmailAddress) {
-      toast({
-        title: "Error",
-        description: "Please enter an email address for the test.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleTestConnection = () => {
+    setIsTestingConnection(true);
     
-    setTestEmailStatus('sending');
-    
-    // Simulate API call
+    // This would be an API call to test the connection
     setTimeout(() => {
-      const success = Math.random() > 0.2; // 80% success rate for demo
-      
-      if (success) {
-        setTestEmailStatus('success');
-        toast({
-          title: "Test Email Sent",
-          description: `A test email has been sent to ${testEmailAddress}.`,
-        });
-      } else {
-        setTestEmailStatus('error');
-        toast({
-          title: "Error",
-          description: "Failed to send test email. Please check your SMTP settings.",
-          variant: "destructive",
-        });
-      }
-      
-      // Reset status after 3 seconds
-      setTimeout(() => setTestEmailStatus('idle'), 3000);
+      setIsTestingConnection(false);
+      setTestResult({
+        success: true,
+        message: "Connection to SMTP server successful!"
+      });
+      setShowTestDialog(true);
     }, 1500);
   };
+
+  const timeZones = [
+    { value: "UTC", label: "UTC" },
+    { value: "America/Sao_Paulo", label: "America/Sao Paulo (GMT-03:00)" },
+    { value: "America/New_York", label: "America/New York (GMT-05:00)" },
+    { value: "Europe/London", label: "Europe/London (GMT+00:00)" },
+    { value: "Europe/Paris", label: "Europe/Paris (GMT+01:00)" },
+    { value: "Asia/Tokyo", label: "Asia/Tokyo (GMT+09:00)" },
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Mail className="h-6 w-6 text-primary" />
-        <h1 className="text-3xl font-bold tracking-tight">Email Notifications</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Email Settings</h1>
       </div>
-
-      <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Server className="h-4 w-4" />
-            <span className="hidden sm:inline">SMTP Settings</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Notification Types</span>
-          </TabsTrigger>
-          <TabsTrigger value="recipients" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">Recipients</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        {/* SMTP Settings Tab */}
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Email Server Configuration</CardTitle>
-              <CardDescription>
-                Configure your SMTP server for sending email notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="smtpServer"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>SMTP Server</FormLabel>
-                          <FormControl>
-                            <Input placeholder="smtp.example.com" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            The address of your SMTP server
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="port"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Port</FormLabel>
-                          <FormControl>
-                            <Input type="number" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Port for SMTP connection (typically 25, 465, or 587)
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input placeholder="notifications@example.com" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Username for SMTP authentication
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Password for SMTP authentication
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="fromAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>From Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="notifications@example.com" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Email address that will appear in the From field
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="useSsl"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Use SSL/TLS</FormLabel>
-                            <FormDescription>
-                              Enable encrypted connection to the SMTP server
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="enabled"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">
-                            Enable Email Notifications
-                          </FormLabel>
-                          <FormDescription>
-                            Turn on or off all email notifications
-                          </FormDescription>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>SMTP Configuration</CardTitle>
+          <CardDescription>
+            Configure the email server settings for sending notifications and reports
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="smtpServer"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SMTP Server</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Server className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="smtp.example.com" className="pl-8" {...field} />
                         </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex justify-between">
-                    <div className="flex space-x-2">
-                      <Input
-                        placeholder="Email for test message"
-                        value={testEmailAddress}
-                        onChange={(e) => setTestEmailAddress(e.target.value)}
-                        className="w-64"
-                      />
-                      <Button 
-                        type="button" 
-                        variant="outline"
-                        onClick={handleSendTestEmail}
-                        disabled={testEmailStatus === 'sending'}
-                      >
-                        {testEmailStatus === 'idle' && (
-                          <>
-                            <Send className="mr-2 h-4 w-4" />
-                            Send Test Email
-                          </>
-                        )}
-                        {testEmailStatus === 'sending' && (
-                          <>
-                            <Clock className="mr-2 h-4 w-4 animate-spin" />
-                            Sending...
-                          </>
-                        )}
-                        {testEmailStatus === 'success' && (
-                          <>
-                            <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                            Sent Successfully
-                          </>
-                        )}
-                        {testEmailStatus === 'error' && (
-                          <>
-                            <XCircle className="mr-2 h-4 w-4 text-destructive" />
-                            Failed to Send
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    <Button type="submit">
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Settings
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Notification Types Tab */}
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configure Notification Types</CardTitle>
-              <CardDescription>
-                Choose which events should trigger email notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className="flex flex-row items-center justify-between rounded-lg border p-4"
-                  >
-                    <div className="space-y-0.5">
-                      <div className="text-base font-medium">
-                        {notification.name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {notification.description}
-                      </div>
-                    </div>
-                    <Switch
-                      checked={notification.enabled}
-                      onCheckedChange={() => handleToggleNotification(notification.id)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter className="border-t pt-6">
-              <Button className="ml-auto" onClick={() => {
-                toast({
-                  title: "Notification Settings Saved",
-                  description: "Your notification preferences have been updated.",
-                });
-              }}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Preferences
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        
-        {/* Recipients Tab */}
-        <TabsContent value="recipients">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Recipients</CardTitle>
-              <CardDescription>
-                Manage who receives email notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recipients.map((recipient) => (
-                  <div
-                    key={recipient.id}
-                    className="flex flex-row items-center justify-between rounded-lg border p-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="text-base font-medium">
-                        {recipient.name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {recipient.email}
-                      </div>
-                      <div className="pt-1">
-                        {recipient.allNotifications ? (
-                          <Badge variant="default">All Notifications</Badge>
-                        ) : (
-                          <Badge variant="outline">Selected Notifications</Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
-                        <Bell className="mr-2 h-4 w-4" />
-                        Configure
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleRemoveRecipient(recipient.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                {recipients.length === 0 && (
-                  <div className="text-center py-8">
-                    <Mail className="mx-auto h-12 w-12 text-muted-foreground opacity-30" />
-                    <h3 className="mt-2 text-lg font-medium">No recipients configured</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Add recipients to receive email notifications
-                    </p>
-                  </div>
-                )}
+                <FormField
+                  control={form.control}
+                  name="port"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Port</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="username@example.com" className="pl-8" {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input type="password" placeholder="••••••••" className="pl-8" {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="fromAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>From Email Address</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="notifications@example.com" className="pl-8" {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="defaultSender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Default Sender Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Azure AD Manager" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="useSsl"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between space-x-2 space-y-0 rounded-md border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel>Use SSL/TLS</FormLabel>
+                        <FormDescription>
+                          Enable for secure connection
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="enabled"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between space-x-2 space-y-0 rounded-md border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel>Enable Email</FormLabel>
+                        <FormDescription>
+                          Turn on email notifications
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
-            </CardContent>
-            <CardFooter className="border-t pt-6 flex justify-end">
-              <Button>
-                <Mail className="mr-2 h-4 w-4" />
-                Add Recipient
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                
+              <div className="space-y-4">
+                <div>
+                  <Label>Default Time Zone</Label>
+                  <Select defaultValue="America/Sao_Paulo">
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select time zone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeZones.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    This will be used for scheduling reports and displaying timestamps
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-between">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleTestConnection}
+                  disabled={isTestingConnection}
+                >
+                  {isTestingConnection ? "Testing..." : "Test Connection"}
+                </Button>
+                <Button type="submit">
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Settings
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+      
+      {/* Test Connection Dialog */}
+      <AlertDialog open={showTestDialog} onOpenChange={setShowTestDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {testResult?.success ? (
+                <div className="flex items-center text-green-600">
+                  <ToggleRight className="h-5 w-5 mr-2" />
+                  Connection Successful
+                </div>
+              ) : (
+                <div className="flex items-center text-destructive">
+                  <AlertCircle className="h-5 w-5 mr-2" />
+                  Connection Failed
+                </div>
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {testResult?.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
