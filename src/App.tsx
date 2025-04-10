@@ -24,6 +24,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Notifications from "./pages/Notifications";
+import Clients from "./pages/Clients"; // Import the new Clients page
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const AppRoutes = () => {
         <Route path="/audit" element={<AuditLogs />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/clients" element={<Clients />} /> {/* Add the new Clients route */}
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

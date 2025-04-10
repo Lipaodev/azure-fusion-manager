@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Mail, 
   Server, 
@@ -54,18 +53,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/components/ui/use-toast';
 import * as z from 'zod';
 import { EmailSettings as EmailSettingsType } from '@/types';
-
-// Empty initial email settings
-const emptyEmailSettings: EmailSettingsType = {
-  smtpServer: '',
-  port: 25,
-  useSsl: false,
-  username: '',
-  password: '',
-  defaultSender: '',
-  fromAddress: '',
-  enabled: false,
-};
+import { db } from '@/services/database';
 
 const formSchema = z.object({
   smtpServer: z.string().min(1, { message: "SMTP server is required" }),
@@ -80,21 +68,29 @@ const formSchema = z.object({
 
 const EmailSettings = () => {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<EmailSettingsType>(emptyEmailSettings);
+  const [settings, setSettings] = useState<EmailSettingsType>(db.getEmailSettings());
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [showTestDialog, setShowTestDialog] = useState(false);
   const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null);
 
+  // Initialize form with settings from database
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: settings,
   });
 
+  // Load settings from database on component mount
+  useEffect(() => {
+    const savedSettings = db.getEmailSettings();
+    if (savedSettings) {
+      setSettings(savedSettings);
+      // Reset form with saved settings
+      form.reset(savedSettings);
+    }
+  }, [form]);
+
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log("Saving email settings:", data);
-    
-    // Here you would save the settings to the database
-    // Make sure all required fields are set properly to match EmailSettingsType
+    // Create a complete EmailSettingsType object to avoid TypeScript errors
     const updatedSettings: EmailSettingsType = {
       smtpServer: data.smtpServer,
       port: data.port,
@@ -106,6 +102,8 @@ const EmailSettings = () => {
       enabled: data.enabled,
     };
     
+    // Save to database
+    db.updateEmailSettings(updatedSettings);
     setSettings(updatedSettings);
     
     toast({

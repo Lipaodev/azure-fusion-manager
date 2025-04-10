@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, AlertCircle, Server, Filter } from 'lucide-react';
+import { PlusCircle, AlertCircle, Server, Filter, PlugZap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import ADServerForm from '@/components/ad-servers/ADServerForm';
 import ADServerCard from '@/components/ad-servers/ADServerCard';
 import { ADServer } from '@/types';
+import { db } from '@/services/database';
 
 const ADServers = () => {
   const { toast } = useToast();
@@ -43,16 +43,25 @@ const ADServers = () => {
   const [serverToDelete, setServerToDelete] = useState<ADServer | undefined>(undefined);
   const [isDeleting, setIsDeleting] = useState(false);
   const [clients, setClients] = useState<{id: string, name: string}[]>([]);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
 
-  // Load clients (would be from database in production)
   useEffect(() => {
-    // This would be an API call in a real application
-    // For now, we'll use local state as a demo
-    setClients([
-      { id: 'client1', name: 'Client 1' },
-      { id: 'client2', name: 'Client 2' },
-      { id: 'client3', name: 'Client 3' },
-    ]);
+    setServers(db.getAllADServers());
+    setClients(db.getAllClients());
+
+    if (db.getAllClients().length === 0) {
+      const defaultClients = [
+        { id: 'client1', name: 'Client 1' },
+        { id: 'client2', name: 'Client 2' },
+        { id: 'client3', name: 'Client 3' },
+      ];
+      
+      defaultClients.forEach(client => {
+        db.addClient(client);
+      });
+      
+      setClients(defaultClients);
+    }
   }, []);
 
   const filteredServers = servers.filter(server => {
@@ -84,40 +93,34 @@ const ADServers = () => {
       lastConnectionTime: new Date(),
     };
 
-    setServers([...servers, newServer]);
+    db.addADServer(newServer);
+    setServers(db.getAllADServers());
+    
     setIsAddServerOpen(false);
     toast({
       title: "Server Added",
       description: `${data.name} has been added to your server list.`,
     });
-
-    // In a real app, you would save to database here
-    console.log("Saving server to database:", newServer);
   };
 
   const handleEditServer = (data: any) => {
     if (!editingServer) return;
 
     try {
-      const updatedServers = servers.map(server => 
-        server.id === editingServer.id 
-          ? { 
-              ...server, 
-              ...data,
-              clientName: clients.find(c => c.id === data.clientId)?.name || server.clientName
-            } 
-          : server
-      );
+      const updatedServer: ADServer = {
+        ...editingServer,
+        ...data,
+        clientName: clients.find(c => c.id === data.clientId)?.name || editingServer.clientName
+      };
 
-      setServers(updatedServers);
+      db.updateADServer(editingServer.id, updatedServer);
+      setServers(db.getAllADServers());
+      
       setEditingServer(undefined);
       toast({
         title: "Server Updated",
         description: `${data.name} has been updated.`,
       });
-
-      // In a real app, you would update in database here
-      console.log("Updating server in database:", data);
     } catch (error) {
       console.error("Error updating server:", error);
       toast({
@@ -133,16 +136,14 @@ const ADServers = () => {
 
     try {
       setIsDeleting(true);
-      const updatedServers = servers.filter(server => server.id !== serverToDelete.id);
-      setServers(updatedServers);
+      
+      db.deleteADServer(serverToDelete.id);
+      setServers(db.getAllADServers());
       
       toast({
         title: "Server Deleted",
         description: `${serverToDelete.name} has been removed.`,
       });
-
-      // In a real app, you would delete from database here
-      console.log("Deleting server from database:", serverToDelete.id);
     } catch (error) {
       console.error("Error deleting server:", error);
       toast({
@@ -156,22 +157,13 @@ const ADServers = () => {
     }
   };
 
-  const handleTestConnection = (server: ADServer) => {
+  const handleTestConnection = async (server: ADServer) => {
     try {
-      // In a real application, this would actually test the connection
-      const success = Math.random() > 0.3; // Simulate success/failure
+      setIsTestingConnection(true);
       
-      const updatedServers = servers.map(s => 
-        s.id === server.id 
-          ? { 
-              ...s, 
-              isConnected: success, 
-              lastConnectionTime: new Date() 
-            } 
-          : s
-      );
+      const success = await db.testADConnection(server);
       
-      setServers(updatedServers);
+      setServers(db.getAllADServers());
       
       if (success) {
         toast({
@@ -185,9 +177,6 @@ const ADServers = () => {
           variant: "destructive",
         });
       }
-
-      // In a real app, you would update connection status in database
-      console.log("Updating connection status in database:", server.id, success);
     } catch (error) {
       console.error("Error testing connection:", error);
       toast({
@@ -195,6 +184,8 @@ const ADServers = () => {
         description: "An error occurred during the connection test",
         variant: "destructive",
       });
+    } finally {
+      setIsTestingConnection(false);
     }
   };
 
@@ -284,7 +275,6 @@ const ADServers = () => {
         </div>
       )}
 
-      {/* Edit Server Dialog */}
       <Dialog open={!!editingServer} onOpenChange={(open) => !open && setEditingServer(undefined)}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
@@ -304,7 +294,6 @@ const ADServers = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!serverToDelete} onOpenChange={(open) => !open && setServerToDelete(undefined)}>
         <AlertDialogContent>
           <AlertDialogHeader>

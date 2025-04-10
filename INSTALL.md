@@ -177,6 +177,18 @@ M365_CLIENT_SECRET=your-client-secret
 M365_REDIRECT_URI=http://localhost:8080/auth/microsoft/callback
 ```
 
+## Data Persistence
+
+In development mode, the application uses localStorage for data persistence between page refreshes. In production, all data is stored in the configured database.
+
+## Client Management
+
+The application includes a client management feature for organizing Active Directory resources by client organization. This allows you to:
+
+1. Create separate client organizations
+2. Associate AD servers with specific clients
+3. Filter and manage resources by client
+
 ## Troubleshooting
 
 If you encounter issues during installation or deployment:
@@ -229,4 +241,3 @@ For additional support, please contact your system administrator.
 - Use a secure database password and restrict database access
 - Consider using environment variables instead of .env files in production
 - Store Microsoft 365 client secrets securely and rotate them regularly
-
